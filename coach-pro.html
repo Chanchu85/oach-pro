@@ -187,9 +187,45 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 4px
 
 /* PRINT */
 @media print { .sidebar,.modal-bg,.toast { display: none !important; } .main { margin-left: 0; } }
+
+/* LOGIN */
+.login-screen { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 999; }
+.login-box { width: 100%; max-width: 360px; padding: 40px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
+.login-logo { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 6px; letter-spacing: -0.4px; }
+.login-logo span { color: var(--green); }
+.login-sub { font-size: 13px; color: var(--text2); margin-bottom: 28px; }
+.login-error { font-size: 12px; color: var(--red); margin-bottom: 10px; display: none; }
+.login-error.show { display: block; }
 </style>
 </head>
 <body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">Coach<span>Pro</span></div>
+    <div class="login-sub">Ingresá tu clave para continuar</div>
+    <div class="login-error" id="login-error">Clave incorrecta</div>
+    <label>Clave de acceso</label>
+    <input type="password" id="login-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px" onclick="doLogin()"><i class="ti ti-lock-open"></i> Ingresar</button>
+  </div>
+</div>
+
+<!-- MODAL CAMBIAR CLAVE -->
+<div class="modal-bg" id="m-clave" onclick="bgc(event,'m-clave')">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Cambiar clave</span><button class="btn btn-ghost btn-sm" onclick="closeM('m-clave')"><i class="ti ti-x"></i></button></div>
+    <label>Clave actual</label><input type="password" id="cl-actual" placeholder="••••••••">
+    <label>Nueva clave</label><input type="password" id="cl-nueva" placeholder="••••••••">
+    <label>Repetir nueva clave</label><input type="password" id="cl-rep" placeholder="••••••••">
+    <div id="cl-error" style="font-size:12px;color:var(--red);margin-bottom:8px;display:none"></div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+      <button class="btn btn-sm" onclick="closeM('m-clave')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="cambiarClave()">Guardar clave</button>
+    </div>
+  </div>
+</div>
 
 <div class="shell">
 <!-- SIDEBAR -->
@@ -202,6 +238,9 @@ label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 4px
   <div class="nav-section">Planificación</div>
   <button class="nav-item" onclick="nav('rutinas',this)"><i class="ti ti-list-details"></i> Rutinas</button>
   <button class="nav-item" onclick="nav('progreso',this)"><i class="ti ti-chart-line"></i> Progreso</button>
+  <div class="nav-section">Cuenta</div>
+  <button class="nav-item" onclick="document.getElementById('m-clave').classList.add('open')"><i class="ti ti-key"></i> Cambiar clave</button>
+  <button class="nav-item" onclick="doLogout()"><i class="ti ti-logout"></i> Salir</button>
   <div class="sync-status">
     <div class="sync-dot" id="sync-dot"></div>
     <span id="sync-txt">Sincronizando...</span>
@@ -1072,8 +1111,56 @@ function rChart() {
 function closeM(id){document.getElementById(id).classList.remove('open');}
 function bgc(e,id){if(e.target===document.getElementById(id))closeM(id);}
 
+// ===================== LOGIN =====================
+const DEFAULT_PASS = 'coach2024';
+const PASS_KEY = 'coachpro_pass';
+
+function getPass() { return localStorage.getItem(PASS_KEY) || DEFAULT_PASS; }
+
+function checkLogin() {
+  const ok = sessionStorage.getItem('coachpro_auth');
+  if (ok === 'true') {
+    document.getElementById('login-screen').style.display = 'none';
+    loadAll();
+  }
+}
+
+function doLogin() {
+  const input = document.getElementById('login-pass').value;
+  const err = document.getElementById('login-error');
+  if (input === getPass()) {
+    sessionStorage.setItem('coachpro_auth', 'true');
+    document.getElementById('login-screen').style.display = 'none';
+    loadAll();
+  } else {
+    err.classList.add('show');
+    document.getElementById('login-pass').value = '';
+    setTimeout(() => err.classList.remove('show'), 2500);
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('coachpro_auth');
+  location.reload();
+}
+
+function cambiarClave() {
+  const actual = document.getElementById('cl-actual').value;
+  const nueva  = document.getElementById('cl-nueva').value;
+  const rep    = document.getElementById('cl-rep').value;
+  const err    = document.getElementById('cl-error');
+  err.style.display = 'none';
+  if (actual !== getPass()) { err.textContent = 'La clave actual es incorrecta'; err.style.display = 'block'; return; }
+  if (nueva.length < 4)    { err.textContent = 'La nueva clave debe tener al menos 4 caracteres'; err.style.display = 'block'; return; }
+  if (nueva !== rep)       { err.textContent = 'Las claves no coinciden'; err.style.display = 'block'; return; }
+  localStorage.setItem(PASS_KEY, nueva);
+  closeM('m-clave');
+  ['cl-actual','cl-nueva','cl-rep'].forEach(id => document.getElementById(id).value = '');
+  showToast('Clave actualizada correctamente');
+}
+
 // ===================== INIT =====================
-loadAll();
+checkLogin();
 </script>
 </body>
 </html>
