@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coach Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root {
+  --bg: #0f0f11;
+  --bg2: #18181c;
+  --bg3: #222228;
+  --border: #2e2e36;
+  --border2: #3a3a44;
+  --text: #f0f0f4;
+  --text2: #9090a0;
+  --text3: #55555f;
+  --green: #22c97a;
+  --green-dim: #1a9e60;
+  --green-bg: rgba(34,201,122,0.1);
+  --purple: #a78bfa;
+  --purple-bg: rgba(167,139,250,0.12);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.12);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.1);
+  --blue: #60a5fa;
+  --blue-bg: rgba(96,165,250,0.1);
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: 'DM Sans', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+/* LAYOUT */
+.shell { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: var(--bg2); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 12px; position: fixed; top: 0; left: 0; height: 100vh; z-index: 10; }
+.main { margin-left: 220px; padding: 28px 32px; flex: 1; max-width: 900px; }
+.logo { font-size: 17px; font-weight: 600; color: var(--text); padding: 4px 10px 20px; letter-spacing: -0.3px; display: flex; align-items: center; gap: 8px; }
+.logo span { color: var(--green); }
+.nav-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border-radius: var(--radius-sm); cursor: pointer; color: var(--text2); font-size: 13.5px; margin-bottom: 2px; transition: all 0.15s; border: none; background: none; width: 100%; text-align: left; }
+.nav-item:hover { background: var(--bg3); color: var(--text); }
+.nav-item.active { background: var(--green-bg); color: var(--green); }
+.nav-item i { font-size: 16px; }
+.nav-section { font-size: 10px; letter-spacing: 0.08em; color: var(--text3); text-transform: uppercase; padding: 14px 10px 6px; }
+.sync-status { margin-top: auto; padding: 10px; background: var(--bg3); border-radius: var(--radius-sm); font-size: 11px; color: var(--text2); display: flex; align-items: center; gap: 6px; }
+.sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+.sync-dot.error { background: var(--red); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* SECTIONS */
+.sec { display: none; } .sec.active { display: block; }
+.page-title { font-size: 22px; font-weight: 600; color: var(--text); margin-bottom: 4px; letter-spacing: -0.4px; }
+.page-sub { font-size: 13px; color: var(--text2); margin-bottom: 24px; }
+
+/* CARDS */
+.card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+.card-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.card-title { font-size: 14px; font-weight: 500; color: var(--text); }
+
+/* GRID */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.g3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+
+/* METRICS */
+.metric { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+.metric .lb { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+.metric .vl { font-size: 26px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; font-family: var(--font-mono); }
+
+/* BUTTONS */
+.btn { padding: 8px 16px; font-size: 13px; border-radius: var(--radius-sm); border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-family: var(--font); transition: all 0.15s; }
+.btn:hover { border-color: var(--border2); background: var(--bg3); color: var(--text); }
+.btn-primary { background: var(--green); color: #0a1f14; border-color: var(--green); font-weight: 500; }
+.btn-primary:hover { background: var(--green-dim); border-color: var(--green-dim); color: #0a1f14; }
+.btn-sm { padding: 5px 11px; font-size: 12px; }
+.btn-ghost { border-color: transparent; color: var(--text3); }
+.btn-ghost:hover { color: var(--text2); background: var(--bg3); border-color: transparent; }
+.btn-danger { border-color: var(--red-bg); color: var(--red); }
+.btn-danger:hover { background: var(--red-bg); }
+
+/* INPUTS */
+input, select, textarea { width: 100%; padding: 9px 11px; font-size: 13px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg3); color: var(--text); font-family: var(--font); margin-bottom: 10px; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); }
+select option { background: var(--bg2); }
+label { font-size: 11px; color: var(--text2); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+/* BADGES */
+.bdg { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; }
+.bdg-green { background: var(--green-bg); color: var(--green); }
+.bdg-gray { background: var(--bg3); color: var(--text2); }
+.bdg-purple { background: var(--purple-bg); color: var(--purple); }
+.bdg-amber { background: var(--amber-bg); color: var(--amber); }
+.bdg-blue { background: var(--blue-bg); color: var(--blue); }
+.bdg-red { background: var(--red-bg); color: var(--red); }
+
+/* TABLE */
+.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tbl th { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; padding: 8px 10px; border-bottom: 1px solid var(--border); text-align: left; font-weight: 500; }
+.tbl td { padding: 11px 10px; border-bottom: 1px solid var(--border); color: var(--text2); }
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tr:hover td { background: var(--bg3); }
+.tbl .name-cell { color: var(--text); font-weight: 500; }
+
+/* ATHLETE ROWS */
+.ath-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); cursor: pointer; transition: opacity 0.15s; }
+.ath-row:last-child { border-bottom: none; }
+.ath-row:hover { opacity: 0.8; }
+.av { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+.av0{background:#1a3d2e;color:#22c97a}.av1{background:#1a2a3d;color:#60a5fa}.av2{background:#3d1a1a;color:#f87171}.av3{background:#2d1a3d;color:#a78bfa}.av4{background:#3d2e1a;color:#f59e0b}.av5{background:#1a3d35;color:#2dd4bf}
+
+/* TABS */
+.tabbar { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tab { padding: 9px 16px; font-size: 13px; cursor: pointer; color: var(--text2); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; }
+.tab.active { color: var(--green); border-bottom-color: var(--green); }
+.tab-pane { display: none; } .tab-pane.active { display: block; }
+
+/* SESSION BLOCKS */
+.ej-block { border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 10px; background: var(--bg3); }
+.ej-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.ej-name { flex: 1; margin: 0; background: transparent; border: none; border-bottom: 1px solid var(--border2); border-radius: 0; padding: 4px 2px; font-size: 13px; font-weight: 500; color: var(--text); }
+.ej-name:focus { border-bottom-color: var(--green); outline: none; }
+.serie-grid { display: grid; grid-template-columns: 22px 1fr 1fr 54px 22px; gap: 6px; align-items: center; margin-bottom: 5px; }
+.serie-grid input { margin: 0; padding: 5px 6px; font-size: 12px; text-align: center; background: var(--bg2); }
+.serie-n { font-size: 11px; color: var(--text3); text-align: center; font-family: var(--font-mono); }
+.col-lbl { font-size: 10px; color: var(--text3); text-align: center; }
+.pct-pill { background: var(--purple-bg); color: var(--purple); font-size: 11px; padding: 2px 6px; border-radius: 10px; text-align: center; font-family: var(--font-mono); font-weight: 500; white-space: nowrap; }
+.add-ej-zone { border: 1px dashed var(--border2); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 10px; background: var(--bg2); margin-bottom: 8px; }
+.add-ej-zone input { margin: 0; border: none; background: transparent; padding: 0; font-size: 13px; }
+.add-ej-zone input:focus { outline: none; border: none; }
+
+/* PCT TABLE */
+.pct-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.pct-cell { background: var(--bg3); border-radius: var(--radius-sm); padding: 8px 4px; text-align: center; border: 1px solid var(--border); }
+.pct-cell .pn { font-size: 10px; color: var(--text3); margin-bottom: 2px; }
+.pct-cell .pv { font-size: 13px; font-weight: 500; color: var(--text); font-family: var(--font-mono); }
+
+/* CHIPS */
+.chip { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 5px 10px; font-size: 12px; color: var(--text2); display: inline-flex; align-items: center; gap: 6px; margin: 3px 3px 3px 0; }
+.chip.clickable { cursor: pointer; } .chip.clickable:hover { border-color: var(--green); color: var(--green); }
+.tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--text3); margin: 2px; }
+
+/* HISTORY */
+.hist-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+.hist-item:last-child { border-bottom: none; }
+.hist-date { font-size: 11px; color: var(--text3); margin-bottom: 4px; font-family: var(--font-mono); }
+.hist-main { font-size: 13px; color: var(--text); }
+.hist-sub { font-size: 12px; color: var(--text2); margin-top: 3px; }
+
+/* MODAL */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 100; align-items: flex-start; justify-content: center; padding: 60px 20px; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; width: 100%; max-width: 460px; max-height: 85vh; overflow-y: auto; }
+.modal-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.modal-title { font-size: 15px; font-weight: 600; color: var(--text); }
+
+/* MISC */
+.dvd { height: 1px; background: var(--border); margin: 16px 0; }
+.empty { text-align: center; padding: 32px; color: var(--text3); font-size: 13px; }
+.back-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--text2); cursor: pointer; background: none; border: none; padding: 0; margin-bottom: 16px; font-family: var(--font); }
+.back-btn:hover { color: var(--text); }
+.tpill { padding: 6px 14px; border-radius: 20px; font-size: 12px; border: 1px solid var(--border2); cursor: pointer; color: var(--text2); display: inline-block; margin: 0 5px 5px 0; transition: all 0.15s; }
+.tpill.active { background: var(--green); color: #0a1f14; border-color: var(--green); font-weight: 500; }
+
+/* TOAST */
+.toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 18px; font-size: 13px; color: var(--text); z-index: 200; display: flex; align-items: center; gap: 8px; transform: translateY(80px); opacity: 0; transition: all 0.3s; max-width: 320px; }
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: var(--green); }
+.toast.error { border-color: var(--red); }
+
+/* RESPONSIVE */
+@media (max-width: 700px) {
+  .sidebar { width: 100%; height: auto; position: relative; flex-direction: row; flex-wrap: wrap; padding: 12px; }
+  .main { margin-left: 0; padding: 16px; }
+  .shell { flex-direction: column; }
+  .g4 { grid-template-columns: 1fr 1fr; }
+  .g3 { grid-template-columns: 1fr 1fr; }
+  .sidebar .nav-section, .sync-status { display: none; }
+  .logo { padding-bottom: 8px; margin-right: 12px; }
+  .nav-item { padding: 7px 10px; font-size: 12px; }
+}
+
+/* PRINT */
+@media print { .sidebar,.modal-bg,.toast { display: none !important; } .main { margin-left: 0; } }
+</style>
+</head>
+<body>
+
+<div class="shell">
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <div class="logo"><i class="ti ti-bolt" style="color:var(--green)"></i> Coach<span>Pro</span></div>
+  <div class="nav-section">Principal</div>
+  <button class="nav-item active" onclick="nav('alumnos',this)"><i class="ti ti-users"></i> Alumnos</button>
+  <button class="nav-item" onclick="nav('sesion',this)"><i class="ti ti-barbell"></i> Sesión</button>
+  <button class="nav-item" onclick="nav('maximos',this)"><i class="ti ti-trophy"></i> Máximos</button>
+  <div class="nav-section">Planificación</div>
+  <button class="nav-item" onclick="nav('rutinas',this)"><i class="ti ti-list-details"></i> Rutinas</button>
+  <button class="nav-item" onclick="nav('progreso',this)"><i class="ti ti-chart-line"></i> Progreso</button>
+  <div class="sync-status">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-txt">Sincronizando...</span>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+<!-- ALUMNOS -->
+<div id="s-alumnos" class="sec active">
+  <div class="page-title">Alumnos</div>
+  <div class="page-sub" id="sub-alumnos">Cargando...</div>
+  <div class="g4">
+    <div class="metric"><div class="lb">Activos</div><div class="vl" id="st-act">—</div></div>
+    <div class="metric"><div class="lb">Sesiones</div><div class="vl" id="st-ses">—</div></div>
+    <div class="metric"><div class="lb">Esta semana</div><div class="vl" id="st-wk">—</div></div>
+    <div class="metric"><div class="lb">Máximos</div><div class="vl" id="st-mx">—</div></div>
+  </div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Lista de alumnos</span>
+      <button class="btn btn-primary btn-sm" onclick="openMA()"><i class="ti ti-plus"></i> Nuevo</button>
+    </div>
+    <div id="lista-alumnos"></div>
+  </div>
+</div>
+
+<!-- PERFIL -->
+<div id="s-perfil" class="sec">
+  <button class="back-btn" onclick="nav('alumnos',document.querySelector('.nav-item'))"><i class="ti ti-arrow-left"></i> Volver</button>
+  <div id="perfil-content"></div>
+</div>
+
+<!-- SESIÓN -->
+<div id="s-sesion" class="sec">
+  <div class="page-title">Registrar sesión</div>
+  <div class="page-sub">Cargá los ejercicios con sus pesos y repeticiones</div>
+  <div class="card">
+    <div class="g2" style="margin-bottom:4px">
+      <div><label>Alumno</label><select id="sal" onchange="loadRefSes()"></select></div>
+      <div><label>Fecha</label><input type="date" id="sfecha"></div>
+    </div>
+    <label style="margin-bottom:8px">Tipo</label>
+    <div style="margin-bottom:14px">
+      <div class="tpill active" onclick="setTipo(this,'Fuerza')">Fuerza</div>
+      <div class="tpill" onclick="setTipo(this,'Funcional')">Funcional</div>
+      <div class="tpill" onclick="setTipo(this,'Running')">Running</div>
+      <div class="tpill" onclick="setTipo(this,'Mixto')">Mixto</div>
+    </div>
+    <input type="hidden" id="stipo" value="Fuerza">
+
+    <div id="bf">
+      <div class="dvd"></div>
+      <div id="exc"></div>
+      <div id="add-ej-zone"></div>
+      <div id="ref-pesos" style="margin-top:12px"></div>
+    </div>
+
+    <div id="brun" style="display:none">
+      <div class="dvd"></div>
+      <div class="g3" style="margin-bottom:0">
+        <div><label>Distancia (km)</label><input type="number" id="rdist" placeholder="10" step="0.1" min="0"></div>
+        <div><label>Tiempo (min)</label><input type="number" id="rmin" placeholder="55" min="0"></div>
+        <div><label>FC promedio (bpm)</label><input type="number" id="rfc" placeholder="145" min="0"></div>
+      </div>
+      <div class="g2">
+        <div><label>Tipo de rodaje</label><select id="rsub"><option>Rodaje suave</option><option>Tempo</option><option>Intervalos</option><option>Fartlek</option><option>Cuestas</option><option>Long run</option></select></div>
+        <div><label>RPE (1-10)</label><input type="number" id="rrpe" placeholder="7" min="1" max="10"></div>
+      </div>
+    </div>
+
+    <div class="dvd"></div>
+    <label>Notas</label>
+    <textarea id="snotas" rows="2" style="resize:none" placeholder="Observaciones, sensaciones, próximos pasos..."></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:8px">
+      <button class="btn" onclick="setupSes()"><i class="ti ti-refresh"></i> Limpiar</button>
+      <button class="btn btn-primary" onclick="guardarSesion()"><i class="ti ti-device-floppy"></i> Guardar sesión</button>
+    </div>
+  </div>
+</div>
+
+<!-- MÁXIMOS -->
+<div id="s-maximos" class="sec">
+  <div class="page-title">Máximos (1RM)</div>
+  <div class="page-sub">Récords por alumno y tabla de porcentajes de carga</div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Récords</span>
+      <button class="btn btn-primary btn-sm" onclick="openMMax()"><i class="ti ti-plus"></i> Registrar 1RM</button>
+    </div>
+    <div class="g2" style="margin-bottom:16px">
+      <div><label>Alumno</label><select id="maxal" onchange="rMaximos()"></select></div>
+      <div style="display:flex;align-items:flex-end;padding-bottom:10px"><span id="max-count" style="font-size:12px;color:var(--text2)"></span></div>
+    </div>
+    <div id="max-tabla"></div>
+    <div class="dvd"></div>
+    <div style="font-size:14px;font-weight:500;color:var(--text);margin-bottom:12px">Tabla de porcentajes</div>
+    <div class="g2" style="margin-bottom:12px">
+      <div><label>Ejercicio</label><select id="pctex" onchange="rPctTabla()"></select></div>
+      <div><label>1RM (kg)</label><input type="number" id="pct1rm" placeholder="100" min="1" oninput="rPctTabla()"></div>
+    </div>
+    <div id="pct-tabla"></div>
+  </div>
+</div>
+
+<!-- RUTINAS -->
+<div id="s-rutinas" class="sec">
+  <div class="page-title">Rutinas</div>
+  <div class="page-sub">Planes de entrenamiento por alumno</div>
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title">Todas las rutinas</span>
+      <button class="btn btn-primary btn-sm" onclick="openMR(null)"><i class="ti ti-plus"></i> Nueva</button>
+    </div>
+    <div id="lista-rutinas"></div>
+  </div>
+</div>
+
+<!-- PROGRESO -->
+<div id="s-progreso" class="sec">
+  <div class="page-title">Progreso</div>
+  <div class="page-sub">Evolución de carga por ejercicio</div>
+  <div class="card">
+    <div class="g2" style="margin-bottom:16px">
+      <div><label>Alumno</label><select id="pal" onchange="rProg()"></select></div>
+      <div><label>Ejercicio / métrica</label><select id="pex" onchange="rChart()"></select></div>
+    </div>
+    <div class="g3" id="prog-stats" style="margin-bottom:16px"></div>
+    <div style="position:relative;width:100%;height:240px"><canvas id="prog-chart" role="img" aria-label="Gráfico de progreso">Sin datos</canvas></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /shell -->
+
+<!-- MODALS -->
+<div class="modal-bg" id="m-alumno" onclick="bgc(event,'m-alumno')">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title" id="ma-title">Nuevo alumno</span><button class="btn btn-ghost btn-sm" onclick="closeM('m-alumno')"><i class="ti ti-x"></i></button></div>
+    <input type="hidden" id="ma-eid">
+    <label>Nombre completo</label><input type="text" id="ma-nombre" placeholder="Ej: Valentina Gómez">
+    <div class="g2">
+      <div><label>Edad</label><input type="number" id="ma-edad" placeholder="28" min="10" max="80"></div>
+      <div><label>Días / semana</label><select id="ma-dias"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select></div>
+    </div>
+    <label>Objetivo</label>
+    <select id="ma-obj"><option>Hipertrofia</option><option>Fuerza</option><option>Pérdida de peso</option><option>Rendimiento</option><option>Salud general</option><option>Running / resistencia</option></select>
+    <label>Notas iniciales</label>
+    <textarea id="ma-notas" rows="2" style="resize:none" placeholder="Lesiones, limitaciones, historial..."></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+      <button class="btn btn-sm" onclick="closeM('m-alumno')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="gAlumno()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-max" onclick="bgc(event,'m-max')">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Registrar máximo (1RM)</span><button class="btn btn-ghost btn-sm" onclick="closeM('m-max')"><i class="ti ti-x"></i></button></div>
+    <div class="g2">
+      <div><label>Alumno</label><select id="mx-al"></select></div>
+      <div><label>Fecha</label><input type="date" id="mx-fecha"></div>
+    </div>
+    <label>Ejercicio</label>
+    <input type="text" id="mx-ej" placeholder="Ej: Press banca" list="mx-ej-list">
+    <datalist id="mx-ej-list"></datalist>
+    <div class="g2">
+      <div><label>Peso (kg)</label><input type="number" id="mx-peso" placeholder="100" min="0" step="0.5" oninput="calcE1rm()"></div>
+      <div><label>Reps realizadas</label><input type="number" id="mx-reps" placeholder="1" min="1" value="1" oninput="calcE1rm()"></div>
+    </div>
+    <div id="mx-result" style="margin-bottom:10px"></div>
+    <label>Notas</label>
+    <textarea id="mx-notas" rows="2" style="resize:none" placeholder="Condiciones, observaciones..."></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+      <button class="btn btn-sm" onclick="closeM('m-max')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="gMax()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="m-rutina" onclick="bgc(event,'m-rutina')">
+  <div class="modal">
+    <div class="modal-hdr"><span class="modal-title">Nueva rutina</span><button class="btn btn-ghost btn-sm" onclick="closeM('m-rutina')"><i class="ti ti-x"></i></button></div>
+    <label>Nombre</label><input type="text" id="mr-nombre" placeholder="Ej: Upper A — Fuerza">
+    <div class="g2">
+      <div><label>Alumno</label><select id="mr-al"></select></div>
+      <div><label>Fase</label><select id="mr-fase"><option>Adaptación</option><option>Hipertrofia</option><option>Fuerza</option><option>Peaking</option><option>Mantenimiento</option></select></div>
+    </div>
+    <div class="g2">
+      <div><label>Semanas</label><input type="number" id="mr-sem" value="4" min="1" max="16"></div>
+      <div><label>Días / semana</label><input type="number" id="mr-dias" value="3" min="1" max="6"></div>
+    </div>
+    <label>Ejercicios (uno por línea)</label>
+    <textarea id="mr-ejs" rows="5" style="resize:none" placeholder="Press banca&#10;Sentadilla&#10;Peso muerto&#10;Remo con barra"></textarea>
+    <label>Indicaciones generales</label>
+    <textarea id="mr-ind" rows="2" style="resize:none" placeholder="Descanso entre series, RPE objetivo..."></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+      <button class="btn btn-sm" onclick="closeM('m-rutina')">Cancelar</button>
+      <button class="btn btn-primary btn-sm" onclick="gRutina()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><i class="ti ti-check" id="toast-icon"></i><span id="toast-msg"></span></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ===================== CONFIG =====================
+const SHEET_ID = '1d8RQkD0cttZGF2XDMnnk-LhWTrOkwPiDau_ht-6XF50';
+const API_KEY  = 'AIzaSyBc-TcOmzxwISCCk9oWLkKa2kL3aLEU3RQ';
+const BASE     = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
+const SHEETS   = { alumnos:'Alumnos', sesiones:'Sesiones', maximos:'Maximos', rutinas:'Rutinas' };
+
+// ===================== HELPERS =====================
+const ini  = n => n.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+const fd   = d => { if(!d) return '—'; const [y,m,dd]=d.split('-'); return `${dd}/${m}/${y}`; };
+const tod  = () => new Date().toISOString().split('T')[0];
+const wago = () => { const d=new Date(); d.setDate(d.getDate()-7); return d.toISOString().split('T')[0]; };
+const rnd  = v => Math.round(v/2.5)*2.5;
+const calc1RM = (kg,reps) => reps===1 ? kg : +(kg*(1+reps/30)).toFixed(1);
+const AVC  = ['av0','av1','av2','av3','av4','av5'];
+
+let DB = { alumnos:[], sesiones:[], maximos:[], rutinas:[] };
+let sesData = [];
+let progChart = null;
+
+// ===================== SYNC / SHEETS =====================
+function setSyncStatus(state, msg) {
+  const dot = document.getElementById('sync-dot');
+  const txt = document.getElementById('sync-txt');
+  dot.className = 'sync-dot' + (state==='syncing'?' syncing':state==='error'?' error':'');
+  txt.textContent = msg;
+}
+
+async function sheetGet(sheetName) {
+  try {
+    const r = await fetch(`${BASE}/values/${encodeURIComponent(sheetName)}?key=${API_KEY}`);
+    if (!r.ok) throw new Error(r.status);
+    const d = await r.json();
+    return d.values || [];
+  } catch(e) { return null; }
+}
+
+async function sheetAppend(sheetName, values) {
+  const r = await fetch(`${BASE}/values/${encodeURIComponent(sheetName)}:append?valueInputOption=RAW&key=${API_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ values })
+  });
+  return r.ok;
+}
+
+async function sheetClear(sheetName) {
+  await fetch(`${BASE}/values/${encodeURIComponent(sheetName)}:clear?key=${API_KEY}`, { method:'POST', headers:{'Content-Type':'application/json'} });
+}
+
+async function sheetWrite(sheetName, rows) {
+  await sheetClear(sheetName);
+  if (!rows.length) return;
+  await fetch(`${BASE}/values/${encodeURIComponent(sheetName)}?valueInputOption=RAW&key=${API_KEY}`, {
+    method: 'PUT',
+    headers: { 'Content-Type':'application/json' },
+    body: JSON.stringify({ values: rows })
+  });
+}
+
+async function ensureSheets() {
+  // Get spreadsheet metadata to check existing sheets
+  try {
+    const r = await fetch(`${BASE}?key=${API_KEY}`);
+    const d = await r.json();
+    const existing = (d.sheets||[]).map(s=>s.properties.title);
+    const needed = Object.values(SHEETS).filter(s=>!existing.includes(s));
+    if (needed.length) {
+      // Create missing sheets via batchUpdate — requires OAuth, so we just notify
+      showToast(`Creá manualmente estas hojas en tu planilla: ${needed.join(', ')}`, 'error');
+    }
+  } catch(e) {}
+}
+
+// Parse rows → objects
+function parseAlumnos(rows) {
+  return rows.slice(1).map(r => ({
+    id: r[0]||'', nombre: r[1]||'', edad: r[2]||'', objetivo: r[3]||'',
+    dias: r[4]||'3', notas: r[5]||'', activo: r[6]!=='false'
+  })).filter(a=>a.nombre);
+}
+function parseSesiones(rows) {
+  return rows.slice(1).map(r => {
+    const obj = { id:r[0]||'', aId:r[1]||'', fecha:r[2]||'', tipo:r[3]||'', notas:r[4]||'' };
+    if (obj.tipo==='Running') {
+      try { obj.run = JSON.parse(r[5]||'{}'); } catch(e){ obj.run={}; }
+    } else {
+      try { obj.series = JSON.parse(r[5]||'[]'); } catch(e){ obj.series=[]; }
+    }
+    return obj;
+  }).filter(s=>s.aId);
+}
+function parseMaximos(rows) {
+  return rows.slice(1).map(r => ({
+    id:r[0]||'', aId:r[1]||'', ej:r[2]||'', kg:parseFloat(r[3])||0,
+    reps:parseInt(r[4])||1, e1rm:parseFloat(r[5])||0, fecha:r[6]||'', notas:r[7]||''
+  })).filter(m=>m.aId&&m.ej);
+}
+function parseRutinas(rows) {
+  return rows.slice(1).map(r => ({
+    id:r[0]||'', aId:r[1]||'', nombre:r[2]||'', fase:r[3]||'', sem:r[4]||'4',
+    dias:r[5]||'3', ejs:(r[6]||'').split('|').filter(Boolean), ind:r[7]||''
+  })).filter(r=>r.nombre);
+}
+
+// Objects → rows
+const hdr = {
+  alumnos:  [['ID','Nombre','Edad','Objetivo','Dias','Notas','Activo']],
+  sesiones: [['ID','AlumnoID','Fecha','Tipo','Notas','Data']],
+  maximos:  [['ID','AlumnoID','Ejercicio','Kg','Reps','E1RM','Fecha','Notas']],
+  rutinas:  [['ID','AlumnoID','Nombre','Fase','Semanas','Dias','Ejercicios','Indicaciones']]
+};
+const toRow = {
+  alumno: a => [a.id,a.nombre,a.edad,a.objetivo,a.dias,a.notas,a.activo],
+  sesion: s => [s.id,s.aId,s.fecha,s.tipo,s.notas, s.tipo==='Running'?JSON.stringify(s.run):JSON.stringify(s.series)],
+  maximo: m => [m.id,m.aId,m.ej,m.kg,m.reps,m.e1rm,m.fecha,m.notas],
+  rutina: r => [r.id,r.aId,r.nombre,r.fase,r.sem,r.dias,r.ejs.join('|'),r.ind]
+};
+
+let nid = 1;
+function newId() { return String(Date.now()) + String(nid++); }
+
+async function loadAll() {
+  setSyncStatus('syncing','Sincronizando...');
+  await ensureSheets();
+  const [ra,rs,rm,rr] = await Promise.all([
+    sheetGet(SHEETS.alumnos), sheetGet(SHEETS.sesiones),
+    sheetGet(SHEETS.maximos), sheetGet(SHEETS.rutinas)
+  ]);
+  if (ra===null) { setSyncStatus('error','Sin conexión'); showToast('No se pudo conectar con Google Sheets. Verificá la API key y que la planilla sea pública.','error'); return; }
+  DB.alumnos  = ra.length>1 ? parseAlumnos(ra)  : [];
+  DB.sesiones = rs&&rs.length>1 ? parseSesiones(rs) : [];
+  DB.maximos  = rm&&rm.length>1 ? parseMaximos(rm)  : [];
+  DB.rutinas  = rr&&rr.length>1 ? parseRutinas(rr)  : [];
+  setSyncStatus('ok', `Sincronizado ${new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}`);
+  rAlumnos();
+  showToast('Datos cargados correctamente','success');
+}
+
+async function saveAlumno(a) {
+  setSyncStatus('syncing','Guardando...');
+  const rows = [hdr.alumnos[0], ...DB.alumnos.map(toRow.alumno)];
+  await sheetWrite(SHEETS.alumnos, rows);
+  setSyncStatus('ok','Guardado');
+}
+async function saveSesion() {
+  setSyncStatus('syncing','Guardando...');
+  const rows = [hdr.sesiones[0], ...DB.sesiones.map(toRow.sesion)];
+  await sheetWrite(SHEETS.sesiones, rows);
+  setSyncStatus('ok','Guardado');
+}
+async function saveMaximo() {
+  setSyncStatus('syncing','Guardando...');
+  const rows = [hdr.maximos[0], ...DB.maximos.map(toRow.maximo)];
+  await sheetWrite(SHEETS.maximos, rows);
+  setSyncStatus('ok','Guardado');
+}
+async function saveRutina() {
+  setSyncStatus('syncing','Guardando...');
+  const rows = [hdr.rutinas[0], ...DB.rutinas.map(toRow.rutina)];
+  await sheetWrite(SHEETS.rutinas, rows);
+  setSyncStatus('ok','Guardado');
+}
+
+// ===================== TOAST =====================
+function showToast(msg, type='success') {
+  const t=document.getElementById('toast');
+  const ic=document.getElementById('toast-icon');
+  t.className='toast '+type;
+  ic.className='ti '+(type==='success'?'ti-check':'ti-alert-circle');
+  document.getElementById('toast-msg').textContent=msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ===================== NAV =====================
+function nav(name, btn) {
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(name==='alumnos') rAlumnos();
+  if(name==='sesion')  setupSes();
+  if(name==='maximos') setupMaximos();
+  if(name==='rutinas') rRutinas();
+  if(name==='progreso') setupProg();
+}
+
+// ===================== ALUMNOS =====================
+function rAlumnos() {
+  const act = DB.alumnos.filter(a=>a.activo).length;
+  document.getElementById('st-act').textContent = act;
+  document.getElementById('st-ses').textContent = DB.sesiones.length;
+  document.getElementById('st-wk').textContent  = DB.sesiones.filter(s=>s.fecha>=wago()).length;
+  document.getElementById('st-mx').textContent  = DB.maximos.length;
+  document.getElementById('sub-alumnos').textContent = `${act} alumno${act!==1?'s':''} activo${act!==1?'s':''}`;
+  const el = document.getElementById('lista-alumnos');
+  if (!DB.alumnos.length) { el.innerHTML='<div class="empty">Sin alumnos. Agregá el primero.</div>'; return; }
+  el.innerHTML = DB.alumnos.map((a,i)=>{
+    const ses = DB.sesiones.filter(s=>s.aId===a.id).sort((x,y)=>y.fecha.localeCompare(x.fecha));
+    const mxs = DB.maximos.filter(m=>m.aId===a.id);
+    const last = ses[0];
+    const aB = a.activo ? '<span class="bdg bdg-green">Activo</span>' : '<span class="bdg bdg-gray">Inactivo</span>';
+    const mB = mxs.length ? `<span class="bdg bdg-purple" style="margin-right:4px">${mxs.length} PR</span>` : '';
+    return `<div class="ath-row" onclick="showPerfil('${a.id}')">
+      <div class="av ${AVC[i%AVC.length]}">${ini(a.nombre)}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;font-weight:500;color:var(--text)">${a.nombre}</div>
+        <div style="font-size:12px;color:var(--text2);margin-top:2px">${a.objetivo} · ${last?'Última: '+fd(last.fecha):'Sin sesiones'}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">${mB}${aB}<i class="ti ti-chevron-right" style="color:var(--text3);font-size:16px"></i></div>
+    </div>`;
+  }).join('');
+}
+
+function showPerfil(id) {
+  const a   = DB.alumnos.find(x=>x.id===id);
+  const idx = DB.alumnos.indexOf(a);
+  const ses = DB.sesiones.filter(s=>s.aId===id).sort((x,y)=>y.fecha.localeCompare(x.fecha));
+  const mxs = DB.maximos.filter(m=>m.aId===id);
+  const ruts= DB.rutinas.filter(r=>r.aId===id);
+
+  const byEx = {};
+  mxs.forEach(m=>{ if(!byEx[m.ej]||m.e1rm>byEx[m.ej].e1rm) byEx[m.ej]=m; });
+  const prsH = Object.values(byEx).map(m=>
+    `<div class="chip"><i class="ti ti-trophy" style="color:var(--amber);font-size:13px"></i> ${m.ej}: <strong>${m.e1rm}kg</strong> <span style="color:var(--text3);font-size:11px">${fd(m.fecha)}</span></div>`
+  ).join('') || '<div class="empty">Sin máximos registrados</div>';
+
+  const sesH = ses.slice(0,6).map(s=>{
+    if (s.run) {
+      const r=s.run, rm=r.d>0?(r.t/r.d).toFixed(2):'—';
+      return `<div class="hist-item"><div class="hist-date">${fd(s.fecha)} · Running · ${r.sub}</div><div class="hist-main">${r.d}km en ${r.t}min · ${rm}min/km · FC ${r.fc}bpm</div><div class="hist-sub">RPE ${r.rpe}/10${s.notas?' · '+s.notas:''}</div></div>`;
+    }
+    const grp={};(s.series||[]).forEach(sr=>{ if(!grp[sr.ej])grp[sr.ej]=[]; grp[sr.ej].push(sr); });
+    const txt = Object.entries(grp).map(([ej,srs])=>`${ej}: ${srs.map(sr=>`${sr.reps}×${sr.kg}kg`).join(' / ')}`).join(' · ');
+    return `<div class="hist-item"><div class="hist-date">${fd(s.fecha)} · ${s.tipo}</div><div class="hist-main">${txt}</div>${s.notas?`<div class="hist-sub">${s.notas}</div>`:''}</div>`;
+  }).join('') || '<div class="empty">Sin sesiones</div>';
+
+  const rutH = ruts.map(r=>`<div class="hist-item">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      <div><div style="font-size:13px;font-weight:500;color:var(--text)">${r.nombre}</div>
+      <div style="font-size:12px;color:var(--text2);margin:3px 0">${r.fase} · ${r.sem}sem · ${r.dias}d/sem</div>
+      <div>${r.ejs.map(e=>`<span class="tag">${e}</span>`).join('')}</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="expRut('${r.id}')"><i class="ti ti-printer"></i></button>
+    </div></div>`).join('') || '<div class="empty">Sin rutinas asignadas</div>';
+
+  document.getElementById('perfil-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+      <div class="av ${AVC[idx%AVC.length]}" style="width:52px;height:52px;font-size:16px">${ini(a.nombre)}</div>
+      <div style="flex:1">
+        <div style="font-size:20px;font-weight:600;color:var(--text);letter-spacing:-0.3px">${a.nombre}</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:3px">${a.edad} años · ${a.objetivo} · ${a.dias}d/sem</div>
+        ${a.notas?`<div style="font-size:12px;color:var(--text3);margin-top:2px">${a.notas}</div>`:''}
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="editA('${a.id}')"><i class="ti ti-edit"></i></button>
+    </div>
+    <div class="tabbar">
+      <div class="tab active" onclick="stab(this,'tp-pr',['tp-hi','tp-ru'])">Máximos</div>
+      <div class="tab" onclick="stab(this,'tp-hi',['tp-pr','tp-ru'])">Historial</div>
+      <div class="tab" onclick="stab(this,'tp-ru',['tp-pr','tp-hi'])">Rutinas</div>
+    </div>
+    <div id="tp-pr" class="tab-pane active">${prsH}<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="openMMaxFor('${a.id}')"><i class="ti ti-plus"></i> Registrar máximo</button></div></div>
+    <div id="tp-hi" class="tab-pane">${sesH}</div>
+    <div id="tp-ru" class="tab-pane">${rutH}<div style="margin-top:10px"><button class="btn btn-ghost btn-sm" onclick="openMR('${a.id}')"><i class="ti ti-plus"></i> Asignar rutina</button></div></div>`;
+
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-perfil').classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+}
+
+function stab(btn,show,hide) {
+  hide.forEach(id=>document.getElementById(id).classList.remove('active'));
+  document.getElementById(show).classList.add('active');
+  btn.parentElement.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ===================== MODAL ALUMNO =====================
+function openMA() {
+  document.getElementById('ma-title').textContent='Nuevo alumno';
+  document.getElementById('ma-eid').value='';
+  ['ma-nombre','ma-edad','ma-notas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m-alumno').classList.add('open');
+}
+function editA(id) {
+  const a=DB.alumnos.find(x=>x.id===id);
+  document.getElementById('ma-title').textContent='Editar alumno';
+  document.getElementById('ma-eid').value=id;
+  document.getElementById('ma-nombre').value=a.nombre;
+  document.getElementById('ma-edad').value=a.edad;
+  document.getElementById('ma-obj').value=a.objetivo;
+  document.getElementById('ma-dias').value=a.dias;
+  document.getElementById('ma-notas').value=a.notas||'';
+  document.getElementById('m-alumno').classList.add('open');
+}
+async function gAlumno() {
+  const n=document.getElementById('ma-nombre').value.trim();
+  if(!n){showToast('Ingresá un nombre','error');return;}
+  const eid=document.getElementById('ma-eid').value;
+  const obj={id:eid||newId(),nombre:n,edad:document.getElementById('ma-edad').value,objetivo:document.getElementById('ma-obj').value,dias:document.getElementById('ma-dias').value,notas:document.getElementById('ma-notas').value,activo:true};
+  if(eid){const i=DB.alumnos.findIndex(a=>a.id===eid);if(i>=0)DB.alumnos[i]=obj;}
+  else DB.alumnos.push(obj);
+  closeM('m-alumno');
+  await saveAlumno();
+  rAlumnos();
+  showToast(`${obj.nombre} guardado`);
+}
+
+// ===================== SESIÓN =====================
+function setupSes() {
+  const sel=document.getElementById('sal');
+  sel.innerHTML=DB.alumnos.filter(a=>a.activo).map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+  document.getElementById('sfecha').value=tod();
+  document.getElementById('snotas').value='';
+  sesData=[];
+  renderSes();
+  loadRefSes();
+}
+
+function setTipo(pill,tipo) {
+  document.querySelectorAll('.tpill').forEach(p=>p.classList.remove('active'));
+  pill.classList.add('active');
+  document.getElementById('stipo').value=tipo;
+  document.getElementById('bf').style.display=tipo==='Running'?'none':'block';
+  document.getElementById('brun').style.display=tipo==='Running'?'block':'none';
+}
+
+function getRM1(ej) {
+  const aid=document.getElementById('sal').value;
+  const mxs=DB.maximos.filter(m=>m.aId===aid&&m.ej.toLowerCase().trim()===ej.toLowerCase().trim());
+  return mxs.length?Math.max(...mxs.map(m=>m.e1rm)):null;
+}
+
+function renderSes() {
+  const cont=document.getElementById('exc');
+  cont.innerHTML=sesData.map((g,gi)=>{
+    const rm1=getRM1(g.ej);
+    const rmBdg=rm1?`<span class="bdg bdg-purple" style="font-size:10px">1RM ${rm1}kg</span>`:'';
+    const cols=`<div style="display:grid;grid-template-columns:22px 1fr 1fr 54px 22px;gap:6px;margin-bottom:4px">
+      <div class="col-lbl">#</div><div class="col-lbl">Reps</div><div class="col-lbl">kg</div><div class="col-lbl">% 1RM</div><div></div>
+    </div>`;
+    const rows=g.series.map((sr,si)=>{
+      const pct=rm1&&sr.kg>0?Math.round(sr.kg/rm1*100)+'%':'—';
+      return `<div class="serie-grid">
+        <div class="serie-n">${si+1}</div>
+        <input type="number" min="1" max="99" value="${sr.reps}" placeholder="Reps" oninput="sesData[${gi}].series[${si}].reps=parseInt(this.value)||0">
+        <input type="number" min="0" step="0.5" value="${sr.kg||''}" placeholder="kg" oninput="sesData[${gi}].series[${si}].kg=parseFloat(this.value)||0;updPct(${gi},${si},this)">
+        <div class="pct-pill" id="pp-${gi}-${si}">${pct}</div>
+        <button class="btn btn-ghost" onclick="rmSerie(${gi},${si})" style="padding:2px 4px;border:none;min-width:0"><i class="ti ti-x" style="font-size:12px"></i></button>
+      </div>`;
+    }).join('');
+    const addBtn=`<button class="btn btn-ghost btn-sm" onclick="addSerieToEj(${gi})" style="margin-top:4px"><i class="ti ti-plus"></i> Serie</button>`;
+    return `<div class="ej-block">
+      <div class="ej-header">
+        <input class="ej-name" value="${g.ej}" placeholder="Ejercicio" oninput="sesData[${gi}].ej=this.value;updAllPcts(${gi})">
+        ${rmBdg}
+        <button class="btn btn-ghost" onclick="rmEj(${gi})" style="padding:2px 6px;border:none;margin-left:auto;min-width:0" title="Eliminar"><i class="ti ti-trash" style="font-size:13px"></i></button>
+      </div>
+      ${cols}${rows}${addBtn}
+    </div>`;
+  }).join('');
+
+  const zone=document.getElementById('add-ej-zone');
+  zone.innerHTML=`<div class="add-ej-zone">
+    <i class="ti ti-plus" style="color:var(--text3);font-size:16px;flex-shrink:0"></i>
+    <input id="new-ej-inp" type="text" placeholder="Nombre del ejercicio — Enter para agregar" list="ses-ej-dl" onkeydown="if(event.key==='Enter')confirmAddEj()">
+    <datalist id="ses-ej-dl"></datalist>
+    <button class="btn btn-primary btn-sm" onclick="confirmAddEj()">Agregar</button>
+  </div>`;
+  fillEjDl();
+}
+
+function fillEjDl() {
+  const aid=document.getElementById('sal').value;
+  const known=[...new Set([
+    ...DB.maximos.filter(m=>m.aId===aid).map(m=>m.ej),
+    ...DB.sesiones.filter(s=>s.aId===aid&&s.series).flatMap(s=>s.series.map(sr=>sr.ej)),
+    'Sentadilla','Press banca','Peso muerto','Press militar','Remo con barra','Dominadas','Hip thrust','Curl bíceps','Extensión tríceps','Prensa 45°'
+  ])];
+  const dl=document.getElementById('ses-ej-dl');
+  if(dl) dl.innerHTML=known.map(e=>`<option value="${e}">`).join('');
+}
+
+function confirmAddEj() {
+  const inp=document.getElementById('new-ej-inp');
+  if(!inp) return;
+  const n=inp.value.trim();
+  if(!n) return;
+  sesData.push({ej:n,series:[{reps:10,kg:0}]});
+  inp.value='';
+  renderSes();
+}
+
+function addSerieToEj(gi) {
+  const last=sesData[gi].series.slice(-1)[0];
+  sesData[gi].series.push({reps:last?last.reps:10,kg:0});
+  renderSes();
+}
+function rmSerie(gi,si) { sesData[gi].series.splice(si,1); if(!sesData[gi].series.length)sesData.splice(gi,1); renderSes(); }
+function rmEj(gi) { sesData.splice(gi,1); renderSes(); }
+
+function updPct(gi,si,input) {
+  const rm1=getRM1(sesData[gi]?.ej);
+  const kg=parseFloat(input.value)||0;
+  const el=document.getElementById(`pp-${gi}-${si}`);
+  if(el) el.textContent=rm1&&kg>0?Math.round(kg/rm1*100)+'%':'—';
+}
+function updAllPcts(gi) {
+  const g=sesData[gi]; if(!g) return;
+  const rm1=getRM1(g.ej);
+  g.series.forEach((sr,si)=>{ const el=document.getElementById(`pp-${gi}-${si}`); if(el) el.textContent=rm1&&sr.kg>0?Math.round(sr.kg/rm1*100)+'%':'—'; });
+}
+
+function loadRefSes() {
+  const aid=document.getElementById('sal').value;
+  const ses=DB.sesiones.filter(s=>s.aId===aid&&s.series).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  const mxs=DB.maximos.filter(m=>m.aId===aid);
+  let html='';
+  if(mxs.length){
+    const chips=mxs.map(m=>`<div class="chip"><i class="ti ti-trophy" style="font-size:12px;color:var(--amber)"></i> ${m.ej}: <strong>${m.e1rm}kg</strong></div>`).join('');
+    html+=`<div style="font-size:11px;color:var(--text3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em">Máximos del alumno</div>${chips}`;
+  }
+  if(ses.length){
+    const grp={};ses[0].series.forEach(sr=>{ if(!grp[sr.ej])grp[sr.ej]=[]; grp[sr.ej].push(sr); });
+    const chips2=Object.entries(grp).map(([ej,srs])=>{
+      const best=Math.max(...srs.map(s=>s.kg));
+      return `<div class="chip clickable" onclick="addEjFromRef('${ej}')" title="Agregar a sesión"><i class="ti ti-plus" style="font-size:11px"></i> ${ej} (${best}kg)</div>`;
+    }).join('');
+    html+=`<div style="font-size:11px;color:var(--text3);margin:10px 0 5px;text-transform:uppercase;letter-spacing:.05em">Última sesión — click para agregar</div>${chips2}`;
+  }
+  document.getElementById('ref-pesos').innerHTML=html;
+}
+
+function addEjFromRef(nombre) {
+  if(sesData.find(g=>g.ej===nombre)) return;
+  sesData.push({ej:nombre,series:[{reps:10,kg:0}]});
+  renderSes();
+}
+
+async function guardarSesion() {
+  const aId=document.getElementById('sal').value;
+  const fecha=document.getElementById('sfecha').value;
+  const tipo=document.getElementById('stipo').value;
+  const notas=document.getElementById('snotas').value;
+  let obj={id:newId(),aId,fecha,tipo,notas};
+  if(tipo==='Running'){
+    const d=parseFloat(document.getElementById('rdist').value)||0;
+    const t=parseFloat(document.getElementById('rmin').value)||0;
+    if(!d||!t){showToast('Completá distancia y tiempo','error');return;}
+    obj.run={d,t,fc:parseInt(document.getElementById('rfc').value)||0,sub:document.getElementById('rsub').value,rpe:parseInt(document.getElementById('rrpe').value)||0};
+  } else {
+    if(!sesData.length){showToast('Agregá al menos un ejercicio','error');return;}
+    const series=[];
+    sesData.forEach(g=>g.series.forEach(sr=>series.push({ej:g.ej,reps:sr.reps,kg:sr.kg})));
+    if(!series.length){showToast('Agregá al menos una serie','error');return;}
+    obj.series=series;
+  }
+  DB.sesiones.push(obj);
+  const al=DB.alumnos.find(a=>a.id===aId);
+  await saveSesion();
+  showToast(`Sesión de ${al?al.nombre:'alumno'} guardada`);
+  sesData=[];
+  setupSes();
+}
+
+// ===================== MÁXIMOS =====================
+function setupMaximos() {
+  document.getElementById('maxal').innerHTML=DB.alumnos.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+  rMaximos();
+}
+
+function rMaximos() {
+  const aid=document.getElementById('maxal').value;
+  const mxs=DB.maximos.filter(m=>m.aId===aid).sort((a,b)=>b.fecha.localeCompare(a.fecha));
+  document.getElementById('max-count').textContent=`${mxs.length} ejercicio${mxs.length!==1?'s':''} con máximo`;
+  const el=document.getElementById('max-tabla');
+  if(!mxs.length){el.innerHTML='<div class="empty">Sin máximos para este alumno</div>';document.getElementById('pct-tabla').innerHTML='';document.getElementById('pctex').innerHTML='';return;}
+  const byEx={};mxs.forEach(m=>{if(!byEx[m.ej])byEx[m.ej]=[];byEx[m.ej].push(m);});
+  el.innerHTML=`<table class="tbl"><thead><tr><th>Ejercicio</th><th>1RM estimado</th><th>Registro</th><th>Fecha</th><th>Notas</th></tr></thead><tbody>
+    ${Object.entries(byEx).map(([ej,arr])=>{
+      const best=arr.sort((a,b)=>b.e1rm-a.e1rm)[0];
+      return `<tr><td class="name-cell">${ej}</td><td style="color:var(--green);font-weight:500;font-family:var(--font-mono)">${best.e1rm}kg</td><td style="color:var(--text2)">${best.kg}kg×${best.reps}</td><td style="color:var(--text2);font-family:var(--font-mono)">${fd(best.fecha)}</td><td style="color:var(--text2)">${best.notas||'—'}</td></tr>`;
+    }).join('')}</tbody></table>`;
+  const ps=document.getElementById('pctex');
+  ps.innerHTML=Object.keys(byEx).map(k=>`<option value="${k}">${k}</option>`).join('');
+  const best1=Object.values(byEx)[0].sort((a,b)=>b.e1rm-a.e1rm)[0];
+  document.getElementById('pct1rm').value=best1.e1rm;
+  rPctTabla();
+}
+
+function rPctTabla() {
+  const rm=parseFloat(document.getElementById('pct1rm').value)||0;
+  if(!rm){document.getElementById('pct-tabla').innerHTML='';return;}
+  const pcts=[[100,95,90,85,80],[75,70,65,60,55],[50,45,40]];
+  let html='';
+  pcts.forEach(row=>{
+    html+=`<div style="display:grid;grid-template-columns:repeat(${row.length},1fr);gap:6px;margin-bottom:6px">`;
+    row.forEach(pct=>{const kg=rnd(rm*pct/100);html+=`<div class="pct-cell"><div class="pn">${pct}%</div><div class="pv">${kg}kg</div></div>`;});
+    html+='</div>';
+  });
+  document.getElementById('pct-tabla').innerHTML=html;
+}
+
+function openMMax() {
+  document.getElementById('mx-al').innerHTML=DB.alumnos.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+  document.getElementById('mx-fecha').value=tod();
+  ['mx-ej','mx-peso','mx-notas'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mx-reps').value='1';
+  document.getElementById('mx-result').innerHTML='';
+  const allEjs=[...new Set(DB.maximos.map(m=>m.ej).concat(DB.sesiones.flatMap(s=>s.series?s.series.map(sr=>sr.ej):[])))];
+  document.getElementById('mx-ej-list').innerHTML=allEjs.map(e=>`<option value="${e}">`).join('');
+  document.getElementById('m-max').classList.add('open');
+}
+function openMMaxFor(aId) { openMMax(); document.getElementById('mx-al').value=aId; }
+function calcE1rm() {
+  const kg=parseFloat(document.getElementById('mx-peso').value)||0;
+  const reps=parseInt(document.getElementById('mx-reps').value)||1;
+  const el=document.getElementById('mx-result');
+  el.innerHTML=kg>0?`<span class="bdg bdg-purple">1RM estimado: ${calc1RM(kg,reps)}kg</span>`:'';
+}
+async function gMax() {
+  const aId=document.getElementById('mx-al').value;
+  const ej=document.getElementById('mx-ej').value.trim();
+  const kg=parseFloat(document.getElementById('mx-peso').value)||0;
+  const reps=parseInt(document.getElementById('mx-reps').value)||1;
+  if(!ej||!kg){showToast('Completá ejercicio y peso','error');return;}
+  DB.maximos.push({id:newId(),aId,ej,kg,reps,e1rm:calc1RM(kg,reps),fecha:document.getElementById('mx-fecha').value,notas:document.getElementById('mx-notas').value});
+  closeM('m-max');
+  await saveMaximo();
+  showToast(`Máximo de ${ej} guardado`);
+  if(document.getElementById('s-maximos').classList.contains('active')) rMaximos();
+}
+
+// ===================== RUTINAS =====================
+function openMR(preId) {
+  ['mr-nombre','mr-ejs','mr-ind'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mr-sem').value='4'; document.getElementById('mr-dias').value='3';
+  const sel=document.getElementById('mr-al');
+  sel.innerHTML=DB.alumnos.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+  if(preId) sel.value=preId;
+  document.getElementById('m-rutina').classList.add('open');
+}
+async function gRutina() {
+  const n=document.getElementById('mr-nombre').value.trim();
+  const aId=document.getElementById('mr-al').value;
+  if(!n){showToast('Ingresá un nombre para la rutina','error');return;}
+  const ejs=document.getElementById('mr-ejs').value.split('\n').map(e=>e.trim()).filter(Boolean);
+  DB.rutinas.push({id:newId(),nombre:n,aId,fase:document.getElementById('mr-fase').value,sem:document.getElementById('mr-sem').value,dias:document.getElementById('mr-dias').value,ejs,ind:document.getElementById('mr-ind').value});
+  closeM('m-rutina');
+  await saveRutina();
+  showToast('Rutina guardada');
+  rRutinas();
+}
+
+function rRutinas() {
+  document.getElementById('mr-al').innerHTML=DB.alumnos.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+  const el=document.getElementById('lista-rutinas');
+  if(!DB.rutinas.length){el.innerHTML='<div class="empty">Sin rutinas</div>';return;}
+  el.innerHTML=DB.rutinas.map(r=>{
+    const al=DB.alumnos.find(a=>a.id===r.aId);
+    return `<div class="hist-item">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:500;color:var(--text)">${r.nombre}</div>
+          <div style="font-size:12px;color:var(--text2);margin:3px 0">${al?al.nombre:'—'} · ${r.fase} · ${r.sem}sem · ${r.dias}d/sem</div>
+          <div>${r.ejs.map(e=>`<span class="tag">${e}</span>`).join('')}</div>
+          ${r.ind?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${r.ind}</div>`:''}
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="expRut('${r.id}')"><i class="ti ti-printer"></i> Imprimir</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function expRut(id) {
+  const r=DB.rutinas.find(x=>x.id===id);
+  const al=DB.alumnos.find(a=>a.id===r.aId);
+  const mxs={};DB.maximos.filter(m=>m.aId===r.aId).forEach(m=>{if(!mxs[m.ej]||m.e1rm>mxs[m.ej])mxs[m.ej]=m.e1rm;});
+  const pctRows=[60,65,70,75,80,85,90];
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${r.nombre}</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono&display=swap" rel="stylesheet">
+  <style>body{font-family:'DM Sans',sans-serif;padding:2rem;max-width:740px;margin:auto;color:#111}
+  h1{font-size:22px;font-weight:600;margin-bottom:4px;letter-spacing:-0.3px}
+  .sub{color:#666;font-size:13px;margin-bottom:1.5rem}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:1.5rem}
+  th{text-align:left;padding:8px 6px;border-bottom:2px solid #111;font-size:11px;text-transform:uppercase;letter-spacing:.06em;font-weight:500}
+  td{padding:9px 6px;border-bottom:1px solid #e8e8e8;font-family:'DM Mono',monospace;font-size:12px}
+  td.name{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500}
+  .pr{color:#7c3aed;font-size:11px;font-family:'DM Mono',monospace}
+  .ind{font-size:12px;color:#555;margin-bottom:1.5rem;padding:10px;background:#f5f5f5;border-radius:6px}
+  .pbtn{margin-top:1rem;padding:10px 24px;font-size:14px;border:1px solid #ccc;border-radius:8px;cursor:pointer;background:#fff;font-family:'DM Sans',sans-serif}
+  .ft{font-size:11px;color:#bbb;margin-top:2rem}
+  @media print{.pbtn{display:none}}</style></head><body>
+  <h1>${r.nombre}</h1>
+  <p class="sub">Alumno: <strong>${al?al.nombre:'—'}</strong> &nbsp;·&nbsp; ${r.fase} &nbsp;·&nbsp; ${r.sem} semanas &nbsp;·&nbsp; ${r.dias} días/semana</p>
+  ${r.ind?`<p class="ind"><strong>Indicaciones:</strong> ${r.ind}</p>`:''}
+  <table><thead><tr><th>#</th><th>Ejercicio</th><th style="text-align:center">1RM</th><th style="text-align:center">Reps</th><th style="text-align:center">%</th><th style="text-align:center">Kg sugerido</th><th>Realizado</th></tr></thead>
+  <tbody>${r.ejs.map((e,i)=>{const rm=mxs[e]||null;return pctRows.map((pct,pi)=>{const kg=rm?rnd(rm*pct/100):null;
+  return `<tr>${pi===0?`<td rowspan="${pctRows.length}" style="vertical-align:top;padding-top:12px;color:#999">${i+1}</td><td rowspan="${pctRows.length}" class="name" style="vertical-align:top;padding-top:12px">${e}${rm?`<br><span class="pr">1RM: ${rm}kg</span>`:''}</td>`:''}
+  <td style="text-align:center;color:#999">${pi===0&&rm?rm+'kg':''}</td>
+  <td style="text-align:center">___</td><td style="text-align:center">${pct}%</td>
+  <td style="text-align:center;font-weight:${pct>=80?600:400}">${kg!==null?kg+'kg':'—'}</td>
+  <td style="color:#ddd">_____________</td></tr>`;}).join('');}).join('')}</tbody></table>
+  <p class="ft">Coach Pro · ${fd(tod())}</p>
+  <button class="pbtn" onclick="window.print()">Imprimir / Guardar PDF</button>
+  </body></html>`;
+  const w=window.open('','_blank','width=840,height=700');
+  if(w){w.document.write(html);w.document.close();w.focus();}
+}
+
+// ===================== PROGRESO =====================
+function setupProg() {
+  document.getElementById('pal').innerHTML=DB.alumnos.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+  rProg();
+}
+function rProg() {
+  const aid=document.getElementById('pal').value;
+  const ses=DB.sesiones.filter(s=>s.aId===aid);
+  const all={};
+  if(ses.some(s=>s.run)) all['Running — distancia (km)']=1;
+  ses.forEach(s=>{if(s.series)s.series.forEach(sr=>{all[sr.ej]=1;});});
+  DB.maximos.filter(m=>m.aId===aid).forEach(m=>{all[m.ej]=1;});
+  const sel=document.getElementById('pex');
+  sel.innerHTML=Object.keys(all).length?Object.keys(all).map(k=>`<option value="${k}">${k}</option>`).join(''):'<option>Sin datos</option>';
+  rChart();
+}
+function rChart() {
+  const aid=document.getElementById('pal').value;
+  const ex=document.getElementById('pex').value;
+  const isRun=ex.startsWith('Running');
+  const ses=DB.sesiones.filter(s=>s.aId===aid).sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  let pts=[];
+  if(isRun) ses.filter(s=>s.run).forEach(s=>pts.push({f:fd(s.fecha),v:s.run.d}));
+  else {
+    ses.forEach(s=>{if(!s.series)return;const srs=s.series.filter(sr=>sr.ej===ex);if(!srs.length)return;pts.push({f:fd(s.fecha),v:Math.max(...srs.map(sr=>sr.kg))});});
+    DB.maximos.filter(m=>m.aId===aid&&m.ej===ex).sort((a,b)=>a.fecha.localeCompare(b.fecha)).forEach(m=>pts.push({f:fd(m.fecha),v:m.e1rm,pr:true}));
+    pts.sort((a,b)=>a.f.localeCompare(b.f));
+  }
+  const st=document.getElementById('prog-stats');
+  const wrap=document.getElementById('prog-chart').parentElement;
+  if(!pts.length){st.innerHTML='';wrap.innerHTML='<div class="empty">Sin datos para esta métrica</div>';return;}
+  const vals=pts.map(p=>p.v);
+  const mx=Math.max(...vals),last=vals[vals.length-1],first=vals[0];
+  const df=+(last-first).toFixed(1),sg=df>0?'+':'';
+  const dc=df>0?'var(--green)':df<0?'var(--red)':'var(--text2)';
+  const u=isRun?'km':'kg';
+  st.innerHTML=`<div class="metric"><div class="lb">Máximo</div><div class="vl">${mx}${u}</div></div>
+    <div class="metric"><div class="lb">Último</div><div class="vl">${last}${u}</div></div>
+    <div class="metric"><div class="lb">Progresión</div><div class="vl" style="font-size:18px;color:${dc}">${sg}${df}${u}</div></div>`;
+  wrap.innerHTML=`<canvas id="prog-chart-c" role="img" aria-label="Progreso de ${ex}">Datos: ${pts.map(p=>p.f+': '+p.v).join(', ')}</canvas>`;
+  setTimeout(()=>{
+    if(progChart){progChart.destroy();progChart=null;}
+    const ctx=document.getElementById('prog-chart-c');if(!ctx)return;
+    progChart=new Chart(ctx,{type:'line',data:{labels:pts.map(p=>p.f),datasets:[{label:ex,data:vals,borderColor:'#22c97a',backgroundColor:'rgba(34,201,122,0.07)',borderWidth:2,pointBackgroundColor:pts.map(p=>p.pr?'#f59e0b':'#22c97a'),pointRadius:pts.map(p=>p.pr?7:4),tension:0.3,fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.y}${u}${pts[c.dataIndex]?.pr?' (1RM)':''}`},bodyColor:'#f0f0f4',backgroundColor:'#18181c',borderColor:'#2e2e36',borderWidth:1}},
+    scales:{y:{ticks:{callback:v=>v+u,font:{size:11},color:'#55555f'},grid:{color:'#2e2e36'},beginAtZero:false},x:{ticks:{font:{size:11},autoSkip:true,maxRotation:30,color:'#55555f'},grid:{color:'#2e2e36'}}}}});
+  },60);
+}
+
+// ===================== MODAL UTILS =====================
+function closeM(id){document.getElementById(id).classList.remove('open');}
+function bgc(e,id){if(e.target===document.getElementById(id))closeM(id);}
+
+// ===================== INIT =====================
+loadAll();
+</script>
+</body>
+</html>
