@@ -366,30 +366,42 @@ body.light .wk-hdr,.wk-footer{background:#ffffff;}
   </div>
 </div>
 
-<div class="mbg" id="m-ru" onclick="bgc(event,'m-ru')">
-  <div class="modal">
-    <div class="mhdr"><span class="mtit" id="mru-tit">Nueva rutina</span><button class="btn btn-gh btn-sm" onclick="closeM('m-ru')">✕</button></div>
-    <input type="hidden" id="ru-id">
-    <label>Nombre de la rutina</label><input type="text" id="ru-nombre" placeholder="Ej: Upper A — Fuerza">
-    <div class="g2">
-      <div><label>Alumno</label><select id="ru-al"></select></div>
-      <div><label>Fase</label><select id="ru-fase"><option>Adaptación</option><option>Hipertrofia</option><option>Fuerza</option><option>Peaking</option><option>Mantenimiento</option></select></div>
+<!-- WORKOUT BUILDER - pantalla completa -->
+<div class="workout-screen" id="m-ru" style="z-index:150;background:var(--bg);overflow-y:auto;">
+  <div class="wk-hdr">
+    <div>
+      <div class="wk-title" id="mru-tit">Nueva rutina</div>
+      <div style="font-size:11px;color:var(--text3)" id="mru-sub">Construí el workout ejercicio por ejercicio</div>
     </div>
-    <div class="g2">
-      <div><label>Semanas</label><input type="number" id="ru-sem" value="4" min="1" max="16"></div>
-      <div><label>Días / sem</label><input type="number" id="ru-dias" value="3" min="1" max="6"></div>
-    </div>
-    <label>Ejercicios (uno por línea)</label>
-    <textarea id="ru-ejs" rows="5" style="resize:none" placeholder="Press banca&#10;Sentadilla&#10;Peso muerto"></textarea>
-    <label>Indicaciones generales</label>
-    <textarea id="ru-ind" rows="2" style="resize:none" placeholder="Descanso, RPE objetivo..."></textarea>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">
+    <div style="display:flex;gap:8px;align-items:center">
       <div id="mru-del-btn"></div>
-      <div style="display:flex;gap:8px">
-        <button class="btn btn-sm" onclick="closeM('m-ru')">Cancelar</button>
-        <button class="btn btn-p btn-sm" onclick="gRutina()">Guardar</button>
-      </div>
+      <button class="btn btn-sm" onclick="closeM('m-ru')">✕ Cancelar</button>
+      <button class="btn btn-g btn-sm" onclick="gRutina()">💾 Guardar rutina</button>
     </div>
+  </div>
+
+  <div style="padding:16px;max-width:700px;margin:0 auto">
+    <!-- INFO BÁSICA -->
+    <div class="card" style="margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:12px">Información de la rutina</div>
+      <input type="hidden" id="ru-id">
+      <label>Nombre</label><input type="text" id="ru-nombre" placeholder="Ej: Upper A — Fuerza">
+      <div class="g2">
+        <div><label>Alumno</label><select id="ru-al" onchange="ruActualizarRM()"></select></div>
+        <div><label>Fase</label><select id="ru-fase"><option>Adaptación</option><option>Hipertrofia</option><option>Fuerza</option><option>Peaking</option><option>Mantenimiento</option></select></div>
+      </div>
+      <div class="g2">
+        <div><label>Semanas</label><input type="number" id="ru-sem" value="4" min="1" max="16"></div>
+        <div><label>Días / sem</label><input type="number" id="ru-dias" value="3" min="1" max="6"></div>
+      </div>
+      <label>Indicaciones generales</label>
+      <textarea id="ru-ind" rows="2" style="resize:none" placeholder="Descanso entre series, RPE objetivo..."></textarea>
+    </div>
+
+    <!-- EJERCICIOS -->
+    <div class="card-title" style="margin-bottom:10px;padding-left:2px">Ejercicios del workout</div>
+    <div id="ru-ejs-cont"></div>
+    <button onclick="ruAddEj()" style="width:100%;padding:12px;border:1px dashed var(--orange-bg);border-radius:var(--radius);background:none;cursor:pointer;font-size:13px;color:var(--orange);font-family:var(--font);margin-bottom:16px">+ Agregar ejercicio</button>
   </div>
 </div>
 
@@ -732,29 +744,166 @@ function showPerfil(id){
 
   const prsH=Object.values(byEx).map(m=>`<div class="chip">🏆 ${m.ej}: <strong>${m.e1rm}kg</strong> <span style="color:var(--text3);font-size:11px">${fd(m.fecha)}</span></div>`).join('')||'<div class="empty">Sin máximos registrados</div>';
 
-  const sesH=ses.slice(0,8).map(s=>{
-    if(s.run){const r=s.run,rm=r.d>0?(r.t/r.d).toFixed(2):'—';return `<div class="hi"><div class="hd">${fd(s.fecha)} · Running · ${r.sub}</div><div class="hm">${r.d}km en ${r.t}min · ${rm}min/km · FC ${r.fc}bpm</div><div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn btn-sm btn-r" onclick="eliminarSesion('${s.id}','${id}')">🗑 Eliminar</button></div></div>`;}
+  const sesH=ses.slice(0,10).map(s=>{
+    // Running session
+    if(s.run){
+      const r=s.run,rm=r.d>0?(r.t/r.d).toFixed(2):'—';
+      return `<div style="border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border)">
+          <div>
+            <span style="font-size:12px;font-weight:600;color:var(--blue)">🏃 Running</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:8px">${fd(s.fecha)}</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-sm btn-r" onclick="eliminarSesion('${s.id}','${id}')">🗑</button>
+          </div>
+        </div>
+        <div style="padding:12px 14px">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--radius-sm);padding:8px 4px"><div style="font-size:18px;font-weight:600;color:var(--text);font-family:var(--mono)">${r.d}</div><div style="font-size:10px;color:var(--text3)">km</div></div>
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--radius-sm);padding:8px 4px"><div style="font-size:18px;font-weight:600;color:var(--text);font-family:var(--mono)">${rm}</div><div style="font-size:10px;color:var(--text3)">min/km</div></div>
+            <div style="text-align:center;background:var(--bg3);border-radius:var(--radius-sm);padding:8px 4px"><div style="font-size:18px;font-weight:600;color:var(--text);font-family:var(--mono)">${r.fc||'—'}</div><div style="font-size:10px;color:var(--text3)">bpm FC</div></div>
+          </div>
+          <div style="font-size:11px;color:var(--text3)">${r.sub} · ${r.t}min${s.notas?' · '+s.notas:''}</div>
+        </div>
+      </div>`;
+    }
+    // Strength/functional session with blocks
     const bs=s.bl||[];
-    const txt=bs.map(b=>{const et=b.ejercicios.map(e=>{const st=e.series.map(sr=>sr.modo==='tiempo'?`${sr.reps}×${sr.tiempo}`:`${sr.reps}×${sr.kg||sr.kgReal||0}kg`).join('/');return`${e.nombre}(${st})`;}).join('+');return`[${b.letra}]${et}`;}).join(' ');
-    return `<div class="hi"><div class="hd">${fd(s.fecha)} · ${s.tipo}${s.notas?' · '+s.notas:''}</div><div class="hm">${txt||'—'}</div><div style="display:flex;justify-content:flex-end;margin-top:6px"><button class="btn btn-sm btn-r" onclick="eliminarSesion('${s.id}','${id}')">🗑 Eliminar</button></div></div>`;
+    const bloquesHTML=bs.map(b=>{
+      const ejsHTML=b.ejercicios.map(e=>{
+        if(!e.nombre)return'';
+        const seriesHTML=e.series.map((sr,si)=>{
+          const kg=sr.kgReal||sr.kg||0;
+          const reps=sr.repsReal||sr.reps||0;
+          const val=sr.modo==='tiempo'?sr.tiempo:`${kg>0?kg+'kg':'—'}`;
+          const rpeStr=sr.rpe?` <span style="color:var(--amber);font-size:10px">RPE${sr.rpe}</span>`:'';
+          return `<span style="font-size:12px;color:var(--text2);font-family:var(--mono)">${si+1}. ${reps}×${val}${rpeStr}</span>`;
+        }).join('<br>');
+        return `<div style="margin-bottom:8px;padding:8px;background:var(--bg2);border-radius:var(--radius-sm);border-left:2px solid var(--orange)">
+          <div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:4px">${e.nombre}</div>
+          ${seriesHTML}
+        </div>`;
+      }).join('');
+      const bloqueLabel=b.ejercicios.length>1?`Bloque ${b.letra} — Superserie`:`Bloque ${b.letra}`;
+      return `<div style="margin-bottom:10px">
+        <div style="font-size:11px;font-weight:600;color:var(--orange);letter-spacing:.05em;margin-bottom:6px;display:flex;align-items:center;gap:6px">
+          <div style="width:20px;height:20px;border-radius:50%;background:var(--orange);color:#1a0a00;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)">${b.letra}</div>
+          ${bloqueLabel}${b.descanso?`<span style="font-weight:400;color:var(--text3)">· ⏱${b.descanso}s</span>`:''}
+        </div>
+        ${ejsHTML}
+      </div>`;
+    }).join('');
+    return `<div style="border:1px solid var(--border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border)">
+        <div>
+          <span style="font-size:12px;font-weight:600;color:var(--text)">${s.tipo}</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:8px">${fd(s.fecha)}</span>
+          ${s.notas?`<span style="font-size:11px;color:var(--text2);margin-left:8px">· ${s.notas}</span>`:''}
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-sm" onclick="verSesionAlumno('${s.id}')">👁 Ver como alumno</button>
+          <button class="btn btn-sm" onclick="repetirSesion('${s.id}')">▶ Repetir</button>
+          <button class="btn btn-sm btn-r" onclick="eliminarSesion('${s.id}','${id}')">🗑</button>
+        </div>
+      </div>
+      <div style="padding:12px 14px">${bloquesHTML||'<div class="empty" style="padding:8px">Sin ejercicios</div>'}</div>
+    </div>`;
   }).join('')||'<div class="empty">Sin sesiones registradas</div>';
 
-  const rutH=ruts.length?ruts.map(r=>`
-    <div class="hi">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div style="flex:1">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${r.nombre}</div>
-          <div style="font-size:12px;color:var(--text2);margin:3px 0">${r.fase} · ${r.sem}sem · ${r.dias}d/sem</div>
-          <div>${r.ejs.map(e=>`<span class="tag">${e}</span>`).join('')}</div>
-          ${r.ind?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${r.ind}</div>`:''}
+  // Build rutinas HTML
+  let noRutinasExtra='';
+  if(!ruts.length){
+    const ultimaSes=ses.find(s=>s.bl&&s.bl.length);
+    if(ultimaSes){
+      const ejsUlt=[...new Set(ultimaSes.bl.flatMap(b=>b.ejercicios.map(e=>e.nombre).filter(Boolean)))];
+      noRutinasExtra=`<div style="background:var(--orange-bg);border:1px solid var(--orange);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:12px">
+        <div style="font-size:13px;font-weight:500;color:var(--orange);margin-bottom:4px">💡 Tip: convertí tu última sesión en rutina</div>
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px">Ejercicios: ${ejsUlt.join(', ')}</div>
+        <button class="btn btn-p btn-sm" onclick="convertirSesionARutina('${ultimaSes.id}','${id}')">+ Crear rutina desde última sesión</button>
+      </div>`;
+    }
+  }
+  const rutH=ruts.length?ruts.map(r=>{
+    const aIdRef=id;
+    const rm1map={};
+    DB.mx.filter(m=>m.aId===id).forEach(m=>{if(!rm1map[m.ej]||m.e1rm>rm1map[m.ej])rm1map[m.ej]=m.e1rm;});
+
+    // Build full exercise table
+    const ejsHTML=(r.ejsData&&r.ejsData.length?r.ejsData:[]).map((ej,ei)=>{
+      const rm1=rm1map[ej.nombre]||null;
+      const rid=r.id;
+      const seriesHTML=ej.series.map((sr,si)=>{
+        // Calculate kg suggestion
+        let kgSug=0;
+        if(ej.modo==='pct'&&rm1&&sr.pct>0) kgSug=rnd(rm1*sr.pct/100);
+        else if(sr.kg>0) kgSug=sr.kg;
+        const pctHint=rm1&&kgSug>0?`<span style="font-size:11px;color:var(--text3);font-family:var(--mono)">${Math.round(kgSug/rm1*100)}%</span>`:'';
+        const pctLabel=ej.modo==='pct'&&sr.pct>0?`<span style="font-size:11px;color:var(--orange);font-family:var(--mono)">${sr.pct}%→</span> `:'';
+        return `<tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:6px 10px;font-size:12px;color:var(--text3);width:28px;font-family:var(--mono)">${si+1}</td>
+          <td style="padding:6px 8px;width:90px">
+            <input type="number" min="1" max="50" value="${sr.reps}"
+              style="width:100%;margin:0;padding:5px 7px;font-size:14px;font-weight:500;text-align:center;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--text)"
+              onchange="ruInlineUpdate('${rid}',${ei},${si},'reps',parseFloat(this.value))">
+          </td>
+          <td style="padding:6px 8px">
+            <div style="display:flex;align-items:center;gap:6px">
+              ${pctLabel}
+              <input type="number" min="0" step="0.5" value="${kgSug||''}" placeholder="kg"
+                style="width:80px;margin:0;padding:5px 7px;font-size:14px;font-weight:600;text-align:center;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--bg3);color:var(--green)"
+                onchange="ruInlineUpdate('${rid}',${ei},${si},'kg',parseFloat(this.value))">
+              <span style="font-size:12px;color:var(--text3)">kg</span>
+              ${pctHint}
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+      const modoBadge=ej.modo==='pct'
+        ?`<span class="bdg b-o" style="font-size:10px">% RM</span>`
+        :`<span class="bdg b-gr" style="font-size:10px">Libre</span>`;
+      return `<div style="margin-bottom:12px;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden">
+        <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--bg3);border-bottom:1px solid var(--border)">
+          <div style="width:22px;height:22px;border-radius:50%;background:var(--orange);color:#1a0a00;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono)">${String.fromCharCode(65+ei)}</div>
+          <div style="font-size:14px;font-weight:600;color:var(--text);flex:1">${ej.nombre}</div>
+          ${modoBadge}
+          ${rm1?`<span style="font-size:11px;color:var(--text3)">1RM: ${rm1}kg</span>`:''}
+          ${ej.descanso?`<span style="font-size:11px;color:var(--text3)">⏱${ej.descanso}s</span>`:''}
         </div>
-        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0">
-          <button class="btn btn-g btn-sm" onclick="abrirWorkout('${id}','${r.id}')">▶ Entrenar</button>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="border-bottom:1px solid var(--border);background:var(--bg2)">
+            <th style="padding:5px 10px;font-size:10px;color:var(--text3);text-align:left;font-weight:500;width:28px">#</th>
+            <th style="padding:5px 10px;font-size:10px;color:var(--text3);text-align:left;font-weight:500;width:90px">Reps</th>
+            <th style="padding:5px 10px;font-size:10px;color:var(--text3);text-align:left;font-weight:500">Peso — editá directo acá</th>
+          </tr></thead>
+          <tbody>${seriesHTML}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+
+    // Fallback for old format routines without ejsData
+    const fallbackEjs=(!r.ejsData||!r.ejsData.length)
+      ?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:8px">${r.ejs.map(e=>`<span class="tag">${e}</span>`).join('')}</div>`
+      :'';
+
+    return `<div style="border:1px solid var(--border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg3);border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-size:15px;font-weight:600;color:var(--text)">${r.nombre}</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px">${r.fase} · ${r.sem} semanas · ${r.dias}d/sem</div>
+          ${r.ind?`<div style="font-size:11px;color:var(--text3);margin-top:3px">${r.ind}</div>`:''}
+        </div>
+        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
+          <button class="btn btn-g btn-sm" onclick="abrirWorkout('${aIdRef}','${r.id}')">▶ Entrenar</button>
           <button class="btn btn-sm btn-gh" onclick="editarRutina('${r.id}')">✏ Editar</button>
           <button class="btn btn-sm btn-gh" onclick="expRut('${r.id}')">🖨 Imprimir</button>
         </div>
       </div>
-    </div>`).join(''):`<div class="empty">Sin rutinas asignadas</div>`;
+      <div style="padding:12px 14px">
+        ${ejsHTML||fallbackEjs}
+      </div>
+    </div>`;
+  }).join(''):`<div class="empty">Sin rutinas asignadas</div>`;
 
   document.getElementById('perfil-content').innerHTML=`
     <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px">
@@ -767,12 +916,14 @@ function showPerfil(id){
       </div>
       <button class="btn btn-gh btn-sm" onclick="editAl('${a.id}')">✏ Editar</button>
     </div>
-    <div class="tabbar">
+    <div class="tabbar" style="position:relative">
       <div class="tab active" onclick="stab(this,'tp-ru',['tp-pr','tp-hi'])">📋 Rutinas</div>
       <div class="tab" onclick="stab(this,'tp-pr',['tp-ru','tp-hi'])">🏆 Máximos</div>
       <div class="tab" onclick="stab(this,'tp-hi',['tp-ru','tp-pr'])">📅 Historial</div>
+      <div id="ru-save-ind" style="position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:11px;color:var(--green);opacity:0;transition:opacity .3s;font-weight:500">✓ Guardado</div>
     </div>
     <div id="tp-ru" class="tp active">
+      ${noRutinasExtra}
       ${rutH}
       <div style="margin-top:10px"><button class="btn btn-sm" onclick="openMRu('${id}')">+ Crear y asignar rutina</button></div>
     </div>
@@ -864,13 +1015,24 @@ function iniciarWorkout(){
   closeM('m-wk');
 
   const pcts=[70,75,80,80,82.5,85,87.5,90];
-  const bloques=r.ejs.map((ejNombre,i)=>{
+  // Use ejsData if available (new format with per-exercise config)
+  const bloques=(r.ejsData&&r.ejsData.length?r.ejsData:r.ejs.map(nombre=>({nombre,modo:'libre',descanso:'90',series:[{reps:repsDef,pct:75,kg:0}]}))).map((ejData,i)=>{
+    const ejNombre=ejData.nombre||r.ejs[i]||'';
     const rm1=getRM1forAl(aId,ejNombre);
-    const series=Array.from({length:seriesDef},(_,si)=>{
-      const pct=pcts[si]||80;const kgSug=rm1?rnd(rm1*pct/100):0;
-      return{modo:'reps',reps:repsDef,tiempo:'00:30',kg:kgSug,kgReal:kgSug||0,repsReal:repsDef,rpe:0};
-    });
-    return{letra:LTRS[i]||String(i+1),nombre:'',descanso:'90',ejercicios:[{nombre:ejNombre,series}]};
+    const series=(ejData.series||[]).length>0
+      ? ejData.series.map(sr=>{
+          // Calculate actual kg based on mode
+          let kgSug=0;
+          if(ejData.modo==='pct'&&rm1&&sr.pct>0) kgSug=rnd(rm1*sr.pct/100);
+          else if(sr.kg>0) kgSug=sr.kg;
+          else if(rm1) kgSug=rnd(rm1*0.75);
+          return{modo:'reps',reps:sr.reps||repsDef,tiempo:'00:30',kg:kgSug,kgReal:kgSug,repsReal:sr.reps||repsDef,rpe:0,pct:sr.pct||0,modoOrigen:ejData.modo};
+        })
+      : Array.from({length:seriesDef},(_,si)=>{
+          const pct=pcts[si]||80;const kgSug=rm1?rnd(rm1*pct/100):0;
+          return{modo:'reps',reps:repsDef,tiempo:'00:30',kg:kgSug,kgReal:kgSug,repsReal:repsDef,rpe:0};
+        });
+    return{letra:LTRS[i]||String(i+1),nombre:ejData.nombre||'',descanso:ejData.descanso||'90',ejercicios:[{nombre:ejNombre,series}]};
   });
   wkState={aId,ruId,fecha,bloques,done:{},rpe:{}};
   renderWorkout(a,r);
@@ -886,7 +1048,11 @@ function renderWorkout(a,r){
   body.innerHTML=wkState.bloques.map((b,bi)=>{
     const ejsH=b.ejercicios.map((ej,ei)=>{
       const rm1=getRM1forAl(wkState.aId,ej.nombre);
-      const sugTxt=rm1?`1RM: ${rm1}kg`:'Sin máximo registrado — ingresá el peso manualmente';
+      const sugTxt=rm1
+        ?(ej.series[0]?.modoOrigen==='pct'
+          ?`1RM: ${rm1}kg · Cargas calculadas al ${ej.series.map(sr=>sr.pct||'—').join('% / ')}%`
+          :`1RM: ${rm1}kg`)
+        :'Sin 1RM registrado — ingresá el peso manualmente';
       const seriesH=ej.series.map((sr,si)=>{
         const key=`${bi}-${ei}-${si}`;const isDone=wkState.done[key];
         const selRpe=wkState.rpe[key]||0;
@@ -1001,7 +1167,16 @@ function getRM1(ej){const aid=document.getElementById('sal').value;const mxs=DB.
 
 function addBL(){BL.push({letra:LTRS[BL.length]||String(BL.length+1),nombre:'',descanso:'90',ejercicios:[{nombre:'',series:[{modo:'reps',reps:10,tiempo:'00:30',kg:0}]}]});renderBL();}
 function addEjBL(bi){BL[bi].ejercicios.push({nombre:'',series:[{modo:'reps',reps:10,tiempo:'00:30',kg:0}]});renderBL();}
-function addSrBL(bi,ei){const l=BL[bi].ejercicios[ei].series.slice(-1)[0];BL[bi].ejercicios[ei].series.push({modo:l?l.modo:'reps',reps:l?l.reps:10,tiempo:l?l.tiempo:'00:30',kg:0});renderBL();}
+function addSrBL(bi,ei){
+  const l=BL[bi].ejercicios[ei].series.slice(-1)[0];
+  BL[bi].ejercicios[ei].series.push({
+    modo:  l ? l.modo   : 'reps',
+    reps:  l ? l.reps   : 10,
+    tiempo:l ? l.tiempo : '00:30',
+    kg:    l ? l.kg     : 0
+  });
+  renderBL();
+}
 function rmBL(bi){BL.splice(bi,1);BL.forEach((b,i)=>b.letra=LTRS[i]||String(i+1));renderBL();}
 function rmEjBL(bi,ei){BL[bi].ejercicios.splice(ei,1);if(!BL[bi].ejercicios.length)rmBL(bi);else renderBL();}
 function rmSrBL(bi,ei,si){BL[bi].ejercicios[ei].series.splice(si,1);if(!BL[bi].ejercicios[ei].series.length)rmEjBL(bi,ei);else renderBL();}
@@ -1046,8 +1221,27 @@ async function guardarSesion(){
   const aId=document.getElementById('sal').value;const fecha=document.getElementById('sfecha').value;const tipo=document.getElementById('stipo').value;const notas=document.getElementById('snotas').value;
   let obj={id:newId(),aId,fecha,tipo,notas};
   if(tipo==='Running'){const d=parseFloat(document.getElementById('rdist').value)||0;const t=parseFloat(document.getElementById('rmin').value)||0;if(!d||!t){toast('Completá distancia y tiempo','bad');return;}obj.run={d,t,fc:parseInt(document.getElementById('rfc').value)||0,sub:document.getElementById('rsub').value,rpe:parseInt(document.getElementById('rrpe').value)||0};}
-  else{if(!BL.length){toast('Agregá al menos un bloque','bad');return;}obj.bl=JSON.parse(JSON.stringify(BL));}
-  DB.se.push(obj);const al=DB.al.find(a=>a.id===aId);await svSeWithMerge();toast(`Sesión de ${al?al.nombre:'alumno'} guardada`);BL=[];setupSes();
+  else{
+    if(!BL.length){toast('Agregá al menos un bloque con + Nuevo bloque','bad');return;}
+    // Validate each block has at least one exercise with a name
+    const bloquesValidos=BL.filter(b=>b.ejercicios.some(e=>e.nombre.trim()));
+    if(!bloquesValidos.length){toast('Escribí el nombre de al menos un ejercicio dentro del bloque','bad');return;}
+    obj.bl=JSON.parse(JSON.stringify(BL));
+  }
+  DB.se.push(obj);
+  const al=DB.al.find(a=>a.id===aId);
+  await svSeWithMerge();
+  // Offer to save as routine
+  const saveAsRutina=confirm(`Sesión de ${al?al.nombre:'alumno'} guardada.\n\n¿Guardar esta sesión también como rutina reutilizable?`);
+  if(saveAsRutina){
+    const nombreRu=prompt('Nombre de la rutina:',`${al?al.nombre:''} - ${document.getElementById('stipo').value} ${fd(fecha)}`);
+    if(nombreRu&&nombreRu.trim()){
+      const ejs=[...new Set(BL.flatMap(b=>b.ejercicios.map(e=>e.nombre).filter(Boolean)))];
+      const ru={id:newId(),nombre:nombreRu.trim(),aId,fase:'Mantenimiento',sem:'4',dias:'3',ejs,ind:BL.map(b=>`Bloque ${b.letra}: descanso ${b.descanso}s`).join(' · ')};
+      DB.ru.push(ru);await svRu();toast(`Rutina "${nombreRu.trim()}" guardada`);
+    }
+  } else {toast(`Sesión guardada ✓`);}
+  BL=[];setupSes();
 }
 
 // ===== MÁXIMOS =====
@@ -1069,39 +1263,174 @@ function calcE1rm(){const kg=parseFloat(document.getElementById('mx-kg').value)|
 async function gMax(){const aId=document.getElementById('mx-al').value;const ej=document.getElementById('mx-ej').value.trim();const kg=parseFloat(document.getElementById('mx-kg').value)||0;const reps=parseInt(document.getElementById('mx-reps').value)||1;if(!ej||!kg){toast('Completá ejercicio y peso','bad');return;}DB.mx.push({id:newId(),aId,ej,kg,reps,e1rm:c1rm(kg,reps),fecha:document.getElementById('mx-f').value,notas:document.getElementById('mx-notas').value});closeM('m-mx');await svMx();toast(`Máximo de ${ej} guardado`);if(document.getElementById('s-maximos').classList.contains('active'))rMaximos();}
 
 // ===== RUTINAS =====
+// ===== WORKOUT BUILDER =====
+let RU_EJS=[]; // [{nombre, modo:'pct'|'libre', series:[{reps,pct,kg}], descanso}]
+
 function openMRu(preId){
   document.getElementById('mru-tit').textContent='Nueva rutina';
   document.getElementById('ru-id').value='';
-  ['ru-nombre','ru-ejs','ru-ind'].forEach(id=>document.getElementById(id).value='');
+  ['ru-nombre','ru-ind'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ru-sem').value='4';document.getElementById('ru-dias').value='3';
   const sel=document.getElementById('ru-al');sel.innerHTML=DB.al.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
   if(preId)sel.value=preId;
   document.getElementById('mru-del-btn').innerHTML='';
-  openM('m-ru');
+  RU_EJS=[];ruRender();
+  document.getElementById('m-ru').classList.add('open');
+  document.body.style.overflow='hidden';
 }
+
 function editarRutina(id){
   const r=DB.ru.find(x=>x.id===id);
   document.getElementById('mru-tit').textContent='Editar rutina';
   document.getElementById('ru-id').value=id;
   document.getElementById('ru-nombre').value=r.nombre;
-  document.getElementById('ru-al').innerHTML=DB.al.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
-  document.getElementById('ru-al').value=r.aId;
+  const sel=document.getElementById('ru-al');sel.innerHTML=DB.al.map(a=>`<option value="${a.id}">${a.nombre}</option>`).join('');
+  sel.value=r.aId;
   document.getElementById('ru-fase').value=r.fase;
   document.getElementById('ru-sem').value=r.sem;
   document.getElementById('ru-dias').value=r.dias;
-  document.getElementById('ru-ejs').value=r.ejs.join('\n');
   document.getElementById('ru-ind').value=r.ind||'';
-  document.getElementById('mru-del-btn').innerHTML=`<button class="btn btn-r btn-sm" onclick="eliminarRutina('${id}')">🗑 Eliminar rutina</button>`;
-  openM('m-ru');
+  document.getElementById('mru-del-btn').innerHTML=`<button class="btn btn-r btn-sm" onclick="eliminarRutina('${id}')">🗑 Eliminar</button>`;
+  // Load ejercicios from saved data
+  if(r.ejsData&&r.ejsData.length){
+    RU_EJS=JSON.parse(JSON.stringify(r.ejsData));
+  } else {
+    // Backward compat: convert old ejs array to new format
+    RU_EJS=r.ejs.map(nombre=>({nombre,modo:'libre',descanso:'90',series:[{reps:10,pct:0,kg:0}]}));
+  }
+  ruRender();
+  document.getElementById('m-ru').classList.add('open');
+  document.body.style.overflow='hidden';
 }
+
+function closeM_ru(){
+  document.getElementById('m-ru').classList.remove('open');
+  document.body.style.overflow='';
+}
+
+function ruActualizarRM(){ruRender();}
+
+function ruGetRM(nombre){
+  const aId=document.getElementById('ru-al').value;
+  const mxs=DB.mx.filter(m=>m.aId===aId&&m.ej.toLowerCase().trim()===nombre.toLowerCase().trim());
+  return mxs.length?Math.max(...mxs.map(m=>m.e1rm)):null;
+}
+
+function ruAddEj(){
+  RU_EJS.push({nombre:'',modo:'libre',descanso:'90',series:[{reps:10,pct:75,kg:0}]});
+  ruRender();
+  // Scroll to bottom
+  const cont=document.getElementById('ru-ejs-cont');
+  setTimeout(()=>cont.lastElementChild?.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
+}
+
+function ruAddSerie(ei){
+  const last=RU_EJS[ei].series.slice(-1)[0];
+  RU_EJS[ei].series.push({reps:last?last.reps:10,pct:last?last.pct:75,kg:last?last.kg:0});
+  ruRender();
+}
+function ruRmSerie(ei,si){RU_EJS[ei].series.splice(si,1);if(!RU_EJS[ei].series.length)RU_EJS[ei].series.push({reps:10,pct:75,kg:0});ruRender();}
+function ruRmEj(ei){RU_EJS.splice(ei,1);ruRender();}
+function ruSetModo(ei,modo){RU_EJS[ei].modo=modo;ruRender();}
+
+function ruRender(){
+  const cont=document.getElementById('ru-ejs-cont');if(!cont)return;
+  const ejSugs=[...new Set([...DB.mx.map(m=>m.ej),...DB.se.flatMap(s=>s.bl?s.bl.flatMap(b=>b.ejercicios.map(e=>e.nombre)):[]),'Sentadilla','Press banca','Peso muerto','Press militar','Remo con barra','Dominadas','Hip thrust','Curl bíceps','Extensión tríceps','Prensa 45°','Box jump','Saltos al cajón','Plancha','Flexiones','Burpees','Kettlebell swing'])].filter(Boolean);
+  const dlHtml=ejSugs.map(e=>`<option value="${e}">`).join('');
+
+  if(!RU_EJS.length){cont.innerHTML='<div class="empty" style="padding:20px">Todavía no hay ejercicios. Hacé click en "+ Agregar ejercicio".</div>';return;}
+
+  cont.innerHTML=RU_EJS.map((ej,ei)=>{
+    const rm1=ruGetRM(ej.nombre);
+    const rmBadge=rm1?`<span class="bdg b-o" style="font-size:10px">1RM ${rm1}kg</span>`:'<span class="bdg b-gr" style="font-size:10px">Sin 1RM</span>';
+    const modeToggle=`<div class="ru-mode-toggle">
+      <button class="ru-mode-btn${ej.modo==='libre'?' active':''}" onclick="ruSetModo(${ei},'libre')">Peso libre</button>
+      <button class="ru-mode-btn${ej.modo==='pct'?' active':''}" onclick="ruSetModo(${ei},'pct')">${rm1?'% de 1RM':'% de 1RM (cargá el 1RM primero)'}</button>
+    </div>`;
+
+    const colHeader=ej.modo==='pct'
+      ?`<div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr 22px;gap:6px;margin-bottom:3px"><div class="clbl">#</div><div class="clbl">Reps</div><div class="clbl">%</div><div class="clbl">Kg calc.</div><div></div></div>`
+      :`<div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr 22px;gap:6px;margin-bottom:3px"><div class="clbl">#</div><div class="clbl">Reps</div><div class="clbl">kg</div><div class="clbl">% 1RM</div><div></div></div>`;
+
+    const seriesHtml=ej.series.map((sr,si)=>{
+      if(ej.modo==='pct'){
+        const kgCalc=rm1?rnd(rm1*sr.pct/100):null;
+        const kgDisplay=kgCalc!==null?`<div class="ru-pct-result">${kgCalc}kg</div>`:`<div style="font-size:11px;color:var(--text3);text-align:center">—</div>`;
+        return `<div class="ru-serie-row">
+          <div class="clbl" style="font-family:var(--mono)">${si+1}</div>
+          <input type="number" min="1" max="50" value="${sr.reps}" placeholder="Reps" oninput="RU_EJS[${ei}].series[${si}].reps=parseInt(this.value)||0">
+          <input type="number" min="1" max="100" step="2.5" value="${sr.pct}" placeholder="%" oninput="RU_EJS[${ei}].series[${si}].pct=parseFloat(this.value)||0;ruUpdateKgDisplay(${ei},${si},this.value)">
+          <div id="ru-kg-${ei}-${si}">${kgDisplay}</div>
+          <button onclick="ruRmSerie(${ei},${si})" style="padding:2px 4px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px">✕</button>
+        </div>`;
+      } else {
+        const pctDisplay=rm1&&sr.kg>0?`<div style="font-size:11px;color:var(--purple);text-align:center;font-family:var(--mono)">${Math.round(sr.kg/rm1*100)}%</div>`:`<div style="font-size:11px;color:var(--text3);text-align:center">—</div>`;
+        return `<div class="ru-serie-row">
+          <div class="clbl" style="font-family:var(--mono)">${si+1}</div>
+          <input type="number" min="1" max="50" value="${sr.reps}" placeholder="Reps" oninput="RU_EJS[${ei}].series[${si}].reps=parseInt(this.value)||0">
+          <input type="number" min="0" step="0.5" value="${sr.kg||''}" placeholder="kg" oninput="RU_EJS[${ei}].series[${si}].kg=parseFloat(this.value)||0;ruUpdatePctDisplay(${ei},${si},this.value)">
+          <div id="ru-pct-${ei}-${si}">${pctDisplay}</div>
+          <button onclick="ruRmSerie(${ei},${si})" style="padding:2px 4px;border:none;background:none;cursor:pointer;color:var(--text3);font-size:13px">✕</button>
+        </div>`;
+      }
+    }).join('');
+
+    return `<div class="ru-ej-card">
+      <div class="ru-ej-hdr">
+        <div class="bl-letra" style="width:24px;height:24px;font-size:11px">${String.fromCharCode(65+ei)}</div>
+        <input value="${ej.nombre}" placeholder="Nombre del ejercicio" list="ru-dl-${ei}"
+          style="flex:1;margin:0;border:none;background:transparent;padding:4px 6px;font-size:14px;font-weight:500;color:var(--text)"
+          oninput="RU_EJS[${ei}].nombre=this.value;ruRender()">
+        <datalist id="ru-dl-${ei}">${dlHtml}</datalist>
+        ${rmBadge}
+        <button onclick="ruRmEj(${ei})" style="padding:2px 8px;border:none;background:none;cursor:pointer;color:var(--red);font-size:13px">✕</button>
+      </div>
+      <div class="ru-ej-body">
+        ${modeToggle}
+        ${colHeader}
+        ${seriesHtml}
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap">
+          <button onclick="ruAddSerie(${ei})" style="padding:4px 10px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:none;cursor:pointer;font-size:12px;color:var(--green);font-family:var(--font)">+ Serie</button>
+          <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+            <span style="font-size:11px;color:var(--text3)">⏱ Descanso:</span>
+            <input type="text" value="${ej.descanso||'90'}" style="margin:0;width:60px;padding:4px 7px;font-size:12px;text-align:center"
+              oninput="RU_EJS[${ei}].descanso=this.value" placeholder="90">
+            <span style="font-size:11px;color:var(--text3)">seg</span>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function ruUpdateKgDisplay(ei,si,pctVal){
+  const rm1=ruGetRM(RU_EJS[ei]?.nombre);
+  const el=document.getElementById(`ru-kg-${ei}-${si}`);
+  if(!el)return;
+  if(rm1&&pctVal>0){const kg=rnd(rm1*parseFloat(pctVal)/100);el.innerHTML=`<div class="ru-pct-result">${kg}kg</div>`;}
+  else el.innerHTML=`<div style="font-size:11px;color:var(--text3);text-align:center">—</div>`;
+}
+function ruUpdatePctDisplay(ei,si,kgVal){
+  const rm1=ruGetRM(RU_EJS[ei]?.nombre);
+  const el=document.getElementById(`ru-pct-${ei}-${si}`);
+  if(!el)return;
+  if(rm1&&parseFloat(kgVal)>0){el.innerHTML=`<div style="font-size:11px;color:var(--purple);text-align:center;font-family:var(--mono)">${Math.round(parseFloat(kgVal)/rm1*100)}%</div>`;}
+  else el.innerHTML=`<div style="font-size:11px;color:var(--text3);text-align:center">—</div>`;
+}
+
 async function gRutina(){
-  const n=document.getElementById('ru-nombre').value.trim();const aId=document.getElementById('ru-al').value;if(!n){toast('Ingresá un nombre','bad');return;}
-  const ejs=document.getElementById('ru-ejs').value.split('\n').map(e=>e.trim()).filter(Boolean);
-  if(!ejs.length){toast('Agregá al menos un ejercicio','bad');return;}
+  const n=document.getElementById('ru-nombre').value.trim();
+  const aId=document.getElementById('ru-al').value;
+  if(!n){toast('Ingresá un nombre para la rutina','bad');return;}
+  if(!RU_EJS.length){toast('Agregá al menos un ejercicio','bad');return;}
+  if(RU_EJS.some(e=>!e.nombre.trim())){toast('Todos los ejercicios necesitan un nombre','bad');return;}
   const eid=document.getElementById('ru-id').value;
-  const ru={id:eid||newId(),nombre:n,aId,fase:document.getElementById('ru-fase').value,sem:document.getElementById('ru-sem').value,dias:document.getElementById('ru-dias').value,ejs,ind:document.getElementById('ru-ind').value};
+  // Build ejs array (names only, for backward compat) and ejsData (full data)
+  const ejs=RU_EJS.map(e=>e.nombre);
+  const ejsData=JSON.parse(JSON.stringify(RU_EJS));
+  const ru={id:eid||newId(),nombre:n,aId,fase:document.getElementById('ru-fase').value,sem:document.getElementById('ru-sem').value,dias:document.getElementById('ru-dias').value,ejs,ejsData,ind:document.getElementById('ru-ind').value};
   if(eid){const i=DB.ru.findIndex(x=>x.id===eid);if(i>=0)DB.ru[i]=ru;}else DB.ru.push(ru);
-  closeM('m-ru');await svRu();toast('Rutina guardada');
+  closeM_ru();await svRu();toast('Rutina guardada');
   if(document.getElementById('s-perfil').classList.contains('active'))showPerfil(aId);
   else rRutinas();
 }
@@ -1124,7 +1453,10 @@ function rRutinas(){
         <div style="flex:1">
           <div style="font-size:13px;font-weight:600;color:var(--text)">${r.nombre}</div>
           <div style="font-size:12px;color:var(--text2);margin:3px 0">${al?al.nombre:'—'} · ${r.fase} · ${r.sem}sem · ${r.dias}d/sem</div>
-          <div>${r.ejs.map(e=>`<span class="tag">${e}</span>`).join('')}</div>
+          <div>${(r.ejsData||[]).length
+            ? r.ejsData.map(e=>`<span class="tag">${e.nombre} <span style="font-size:10px;opacity:.7">${e.modo==='pct'?e.series.map(s=>s.pct+'%').join('/'):e.series.map(s=>s.kg?s.kg+'kg':'libre').join('/')}</span></span>`).join('')
+            : r.ejs.map(e=>`<span class="tag">${e}</span>`).join('')
+          }</div>
           ${r.ind?`<div style="font-size:12px;color:var(--text3);margin-top:4px">${r.ind}</div>`:''}
         </div>
         <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0">
@@ -1214,7 +1546,7 @@ function rChart(){
 }
 
 function openM(id){document.getElementById(id).classList.add('open');}
-function closeM(id){document.getElementById(id).classList.remove('open');}
+function closeM(id){if(id==='m-ru'){closeM_ru();return;}document.getElementById(id).classList.remove('open');}
 function bgc(e,id){if(e.target===document.getElementById(id))closeM(id);}
 
 // ===== ENTREGA 3: TEMA, BACKUP, PROTECCIÓN API KEY =====
@@ -1473,6 +1805,134 @@ function rHistRMChart(){
         scales:{y:{ticks:{callback:v=>v+'kg',font:{size:11},color:'#55555f'},grid:{color:'#2e2e36'},beginAtZero:false},x:{ticks:{font:{size:11},color:'#55555f'},grid:{color:'#2e2e36'}}}}
     });
   },60);
+}
+
+// ===== VISTA ALUMNO =====
+function verSesionAlumno(sesId){
+  const s=DB.se.find(x=>x.id===sesId);if(!s)return;
+  const a=DB.al.find(x=>x.id===s.aId);
+  const bs=s.bl||[];
+
+  const bloquesH=bs.map(b=>{
+    const ejsH=b.ejercicios.map(e=>{
+      if(!e.nombre)return'';
+      const serH=e.series.map((sr,si)=>{
+        const kg=sr.kgReal||sr.kg||0;
+        const reps=sr.repsReal||sr.reps||0;
+        const val=sr.modo==='tiempo'?sr.tiempo:`${kg>0?kg+'kg':'Peso libre'}`;
+        return `<tr><td style="padding:8px 10px;font-size:14px;color:#555;width:40px">${si+1}</td>
+          <td style="padding:8px 10px;font-size:15px;font-weight:500">${reps} ${sr.modo==='tiempo'?'seg':'reps'}</td>
+          <td style="padding:8px 10px;font-size:15px;font-weight:600;color:#FF9D1D">${val}</td>
+          <td style="padding:8px 10px"><div style="width:24px;height:24px;border:2px solid #ddd;border-radius:50%"></div></td>
+        </tr>`;
+      }).join('');
+      return `<div style="margin-bottom:16px">
+        <div style="font-size:16px;font-weight:600;color:#111;margin-bottom:8px;padding-left:4px">${e.nombre}</div>
+        <table style="width:100%;border-collapse:collapse;background:#f9f9f9;border-radius:8px;overflow:hidden">
+          <thead><tr style="background:#f0f0f0"><th style="padding:6px 10px;font-size:11px;color:#999;text-align:left;font-weight:500">Serie</th><th style="padding:6px 10px;font-size:11px;color:#999;text-align:left;font-weight:500">Reps</th><th style="padding:6px 10px;font-size:11px;color:#999;text-align:left;font-weight:500">Peso</th><th style="padding:6px 10px;font-size:11px;color:#999;text-align:left;font-weight:500">✓</th></tr></thead>
+          <tbody>${serH}</tbody>
+        </table>
+      </div>`;
+    }).join('');
+    const bloqueLabel=b.ejercicios.length>1?'Superserie':'';
+    return `<div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid #FF9D1D">
+        <div style="width:32px;height:32px;border-radius:50%;background:#FF9D1D;color:#fff;font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;font-family:monospace">${b.letra}</div>
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#111">${bloqueLabel||('Bloque '+b.letra)}</div>
+          ${b.descanso?`<div style="font-size:11px;color:#999">⏱ Descanso: ${b.descanso} seg</div>`:''}
+        </div>
+      </div>
+      ${ejsH}
+    </div>`;
+  }).join('');
+
+  const html=`<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Entrenamiento · ${a?a.nombre:''}</title>
+  <style>
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#fff;color:#111;padding:20px;max-width:480px;margin:0 auto;}
+    h1{font-size:20px;font-weight:700;margin-bottom:4px;letter-spacing:-.3px;}
+    .sub{font-size:13px;color:#999;margin-bottom:24px;}
+    .pro{color:#FF9D1D;}
+    .by{font-size:11px;color:#ccc;margin-top:32px;text-align:center;}
+    @media print{.nobtn{display:none}}
+  </style></head><body>
+  <h1>${a?a.nombre:''}</h1>
+  <div class="sub">${s.tipo} · ${fd(s.fecha)}${s.notas?' · '+s.notas:''}</div>
+  ${bloquesH}
+  <div class="by">Coach<span class="pro">Pro</span> · by Efasports</div>
+  <div style="margin-top:20px;text-align:center" class="nobtn">
+    <button onclick="window.print()" style="padding:12px 28px;background:#FF9D1D;color:#fff;border:none;border-radius:8px;font-size:15px;cursor:pointer;font-weight:600">Imprimir / Guardar PDF</button>
+  </div>
+  </body></html>`;
+
+  const w=window.open('','_blank','width=520,height=800');
+  if(w){w.document.write(html);w.document.close();w.focus();}
+}
+
+// ===== EDICIÓN INLINE DE RUTINAS =====
+async function ruInlineUpdate(ruId, ei, si, field, val){
+  const r=DB.ru.find(x=>x.id===ruId);
+  if(!r||!r.ejsData||!r.ejsData[ei]||!r.ejsData[ei].series[si])return;
+  r.ejsData[ei].series[si][field]=val;
+  // Also update ejs array for backward compat
+  r.ejs=r.ejsData.map(e=>e.nombre);
+  // Debounce save — wait 1.5s after last change
+  clearTimeout(window._ruSaveTimer);
+  window._ruSaveTimer=setTimeout(async()=>{
+    await svRu();
+    // Show a subtle saved indicator
+    const ind=document.getElementById('ru-save-ind');
+    if(ind){ind.textContent='✓ Guardado';ind.style.opacity='1';setTimeout(()=>ind.style.opacity='0',2000);}
+  },1500);
+}
+
+// ===== FLUJO SESIÓN → RUTINA / REPETIR SESIÓN =====
+function convertirSesionARutina(sesId, aId){
+  const s=DB.se.find(x=>x.id===sesId);const a=DB.al.find(x=>x.id===aId);
+  if(!s||!s.bl)return;
+  const ejs=[...new Set(s.bl.flatMap(b=>b.ejercicios.map(e=>e.nombre).filter(Boolean)))];
+  const ind=s.bl.map(b=>`Bloque ${b.letra}: ${b.ejercicios.map(e=>e.nombre).join('+')} — descanso ${b.descanso||90}s`).join(' · ');
+  // Pre-fill the rutina modal
+  document.getElementById('mru-tit').textContent='Nueva rutina desde sesión';
+  document.getElementById('ru-id').value='';
+  document.getElementById('ru-nombre').value=`${a?a.nombre:''} - ${s.tipo} ${fd(s.fecha)}`;
+  document.getElementById('ru-al').innerHTML=DB.al.map(al=>`<option value="${al.id}">${al.nombre}</option>`).join('');
+  document.getElementById('ru-al').value=aId;
+  document.getElementById('ru-fase').value='Mantenimiento';
+  document.getElementById('ru-sem').value='4';
+  document.getElementById('ru-dias').value='3';
+  document.getElementById('ru-ejs').value=ejs.join('
+');
+  document.getElementById('ru-ind').value=ind;
+  document.getElementById('mru-del-btn').innerHTML='';
+  openM('m-ru');
+}
+
+function repetirSesion(sesId){
+  const s=DB.se.find(x=>x.id===sesId);if(!s||!s.bl)return;
+  // Navigate to sesion tab and pre-load the blocks
+  nav('sesion',null);setMobileNav('sesion');
+  // Wait for setupSes to run, then inject blocks
+  setTimeout(()=>{
+    // Set the alumno
+    document.getElementById('sal').value=s.aId;
+    // Load the blocks from the previous session
+    BL=JSON.parse(JSON.stringify(s.bl));
+    // Re-letter them
+    BL.forEach((b,i)=>b.letra=LTRS[i]||String(i+1));
+    // Set today's date
+    document.getElementById('sfecha').value=tod();
+    // Set tipo
+    const tipoMap={'Fuerza':0,'Funcional':1,'Running':2,'Mixto':3};
+    const pills=document.querySelectorAll('.tpill');
+    pills.forEach(p=>p.classList.remove('active'));
+    const idx=tipoMap[s.tipo]||0;if(pills[idx])pills[idx].classList.add('active');
+    document.getElementById('stipo').value=s.tipo||'Fuerza';
+    renderBL();
+    loadRefSes();
+    toast('Sesión anterior cargada — ajustá los pesos y guardá');
+  },100);
 }
 
 checkLogin();
